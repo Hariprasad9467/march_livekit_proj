@@ -50,6 +50,19 @@ const PORT =5000;
 // const MONGO_URI = 'mongodb://localhost:27017/Demo_Db';
 //const MONGO_URI = 'mongodb://localhost:27017/Copy_Dashboard_Db';
 
+
+
+
+const corsOptions = {
+  origin: [
+    "https://live-hrmproj-march.netlify.app",
+    "https://march-livekit-proj.onrender.com",
+    "http://localhost:5000",
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+};
+app.use(cors(corsOptions));
 // ---------------- MIDDLEWARE ---------------- //
 app.use((req, res, next) => {
   console.log(`📥 ${req.method} ${req.originalUrl}`);
