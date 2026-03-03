@@ -309,7 +309,7 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:5000/profile/$employeeId'),
+        Uri.parse('https://march-livekit-proj.onrender.com/profile/$employeeId'),
       );
       if (response.statusCode == 200) {
         setState(() {
@@ -330,7 +330,7 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
     final id = currentEmployeeId;
     if (id == null) return;
     try {
-      final res = await http.get(Uri.parse("http://localhost:5000/api/employees/$id"));
+      final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/employees/$id"));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         setState(() {
@@ -359,7 +359,7 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
       try {
         var request = http.MultipartRequest(
           'PUT',
-          Uri.parse("http://localhost:5000/api/employees/$id"),
+          Uri.parse("https://march-livekit-proj.onrender.com/api/employees/$id"),
         );
 
         if (kIsWeb && file.bytes != null) {
@@ -410,7 +410,7 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
 
     try {
       final url = Uri.parse(
-        'http://localhost:5000/requests/profile/$employeeId/request-change',
+        'https://march-livekit-proj.onrender.com/requests/profile/$employeeId/request-change',
       );
       final body = jsonEncode({
         'fullName': employee?.fullName ?? '',
@@ -454,7 +454,7 @@ Future<void> saveEmployeeField(String field, String newValue) async {
 
   try {
     final response = await http.patch(
-      Uri.parse('http://localhost:5000/profile/$employeeId'),
+      Uri.parse('https://march-livekit-proj.onrender.com/profile/$employeeId'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({field: newValue}),
     );
@@ -506,7 +506,7 @@ Future<void> saveEmployeeField(String field, String newValue) async {
     if (employeeId == null) return;
 
     try {
-      final uri = Uri.parse("http://localhost:5000/upload/$employeeId");
+      final uri = Uri.parse("https://march-livekit-proj.onrender.com/upload/$employeeId");
       final request = http.MultipartRequest('POST', uri);
 
       // Determine a simple contentType based on extension (avoid adding extra package)
@@ -571,7 +571,7 @@ Future<void> _downloadPDF() async {
   if (id == null) return;
 
   final url = Uri.parse(
-    "http://localhost:5000/profile/$id/download",
+    "https://march-livekit-proj.onrender.com/profile/$id/download",
   );
   await launchUrl(url, mode: LaunchMode.externalApplication);
 }
@@ -581,7 +581,7 @@ Future<void> _exportExcel() async {
   if (id == null) return;
 
   final url = Uri.parse(
-    "http://localhost:5000/profile/$id/excel",
+    "https://march-livekit-proj.onrender.com/profile/$id/excel",
   );
   await launchUrl(url, mode: LaunchMode.externalApplication);
 }
@@ -789,7 +789,7 @@ Future<void> _exportExcel() async {
                 ).employeeId;
                 await http.post(
                   Uri.parse(
-                    'http://localhost:5000/profile/$employeeId/experience',
+                    'https://march-livekit-proj.onrender.com/profile/$employeeId/experience',
                   ),
                   headers: {'Content-Type': 'application/json'},
                   body: jsonEncode(experience),
@@ -845,7 +845,7 @@ Future<void> _exportExcel() async {
                 if (hasFile)
                   TextButton(
                     onPressed: () async {
-                      final url = "http://localhost:5000$filePath";
+                      final url = "https://march-livekit-proj.onrender.com$filePath";
                       if (await canLaunchUrl(Uri.parse(url))) {
                         await launchUrl(
                           Uri.parse(url),
@@ -1112,7 +1112,7 @@ Future<void> _exportExcel() async {
                 try {
                   final response = await http.put(
                     Uri.parse(
-                      'http://localhost:5000/profile/$employeeId/experience/${exp.id}',
+                      'https://march-livekit-proj.onrender.com/profile/$employeeId/experience/${exp.id}',
                     ),
                     headers: {'Content-Type': 'application/json'},
                     body: jsonEncode(updatedExp),
@@ -1161,7 +1161,7 @@ Future<void> _exportExcel() async {
     try {
       final response = await http.delete(
         Uri.parse(
-          'http://localhost:5000/profile/$employeeId/experience/${exp.id}',
+          'https://march-livekit-proj.onrender.com/profile/$employeeId/experience/${exp.id}',
         ),
       );
 
@@ -1221,7 +1221,7 @@ Future<void> _exportExcel() async {
                 radius: 30,
                 backgroundColor: Colors.white10,
                 backgroundImage: _profileImageUrl != null
-                    ? NetworkImage("http://localhost:5000$_profileImageUrl")
+                    ? NetworkImage("https://march-livekit-proj.onrender.com$_profileImageUrl")
                     : null,
                 child: _profileImageUrl == null
                     ? const Icon(Icons.person, size: 36, color: Colors.white)

@@ -62,7 +62,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
     if (employeeId == null) return;
 
     final res = await http.get(
-      Uri.parse("http://localhost:5000/notifications/unread-count/$employeeId"),
+      Uri.parse("https://march-livekit-proj.onrender.com/notifications/unread-count/$employeeId"),
     );
 
     if (res.statusCode == 200 && mounted) {
@@ -81,7 +81,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:5000/get-employee-name/$employeeId'),
+        Uri.parse('https://march-livekit-proj.onrender.com/get-employee-name/$employeeId'),
       );
 
       if (response.statusCode == 200) {
@@ -114,7 +114,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
 
       final year = DateTime.now().year;
       final url =
-          "http://localhost:5000/apply/leave-balance/$employeeId?year=$year";
+          "https://march-livekit-proj.onrender.com/apply/leave-balance/$employeeId?year=$year";
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -156,7 +156,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://localhost:5000/api/mail/pending-count?employeeId=$employeeId',
+          'https://march-livekit-proj.onrender.com/api/mail/pending-count?employeeId=$employeeId',
         ),
       );
 

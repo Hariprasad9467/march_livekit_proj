@@ -92,7 +92,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
     if (employeeId == null) return;
 
     final res = await http.get(
-      Uri.parse("http://localhost:5000/notifications/unread-count/$employeeId"),
+      Uri.parse("https://march-livekit-proj.onrender.com/notifications/unread-count/$employeeId"),
     );
 
     if (res.statusCode == 200 && mounted) {
@@ -116,7 +116,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
     }
 
     try {
-      final uri = Uri.parse("http://localhost:5000/api/employees/$employeeId");
+      final uri = Uri.parse("https://march-livekit-proj.onrender.com/api/employees/$employeeId");
       final resp = await http.get(uri);
 
       if (resp.statusCode == 200) {
@@ -152,7 +152,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
 
       final year = DateTime.now().year;
       final url =
-          "http://localhost:5000/apply/leave-balance/$employeeId?year=$year";
+          "https://march-livekit-proj.onrender.com/apply/leave-balance/$employeeId?year=$year";
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -190,7 +190,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
       final response = await http.get(
         Uri.parse(
           // Pass both role and ID to the backend
-          "http://localhost:5000/apply/pending-count?approver=$userRole&approverId=$employeeId",
+          "https://march-livekit-proj.onrender.com/apply/pending-count?approver=$userRole&approverId=$employeeId",
         ),
       );
 
@@ -211,7 +211,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
   Future<int> fetchRequestPendingCount(String approverRole) async {
     try {
       final uri = Uri.parse(
-        "http://localhost:5000/requests/count?approverRole=$approverRole&status=pending",
+        "https://march-livekit-proj.onrender.com/requests/count?approverRole=$approverRole&status=pending",
       );
       final response = await http.get(uri);
 
@@ -240,7 +240,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://localhost:5000/api/mail/pending-count?employeeId=$employeeId',
+          'https://march-livekit-proj.onrender.com/api/mail/pending-count?employeeId=$employeeId',
         ),
       );
 
@@ -263,7 +263,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
   Future<void> _deleteEmployeeComment(String id) async {
     try {
       final response = await http.delete(
-        Uri.parse("http://localhost:5000/review-decision/$id"),
+        Uri.parse("https://march-livekit-proj.onrender.com/review-decision/$id"),
       );
 
       if (response.statusCode == 200) {
@@ -290,7 +290,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
   Future<void> _showEmployeeComments() async {
     try {
       final response = await http.get(
-        Uri.parse("http://localhost:5000/review-decision"),
+        Uri.parse("https://march-livekit-proj.onrender.com/review-decision"),
         headers: {"Accept": "application/json"},
       );
 
@@ -691,7 +691,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
                                   var request = http.MultipartRequest(
                                     'POST',
                                     Uri.parse(
-                                      "http://localhost:5000/api/employees",
+                                      "https://march-livekit-proj.onrender.com/api/employees",
                                     ),
                                   );
 
@@ -940,7 +940,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
     // 4. Send to backend
     try {
       final response = await http.post(
-        Uri.parse("http://localhost:5000/api/employees/bulk"),
+        Uri.parse("https://march-livekit-proj.onrender.com/api/employees/bulk"),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(employeesToCreate),
       );
@@ -1000,7 +1000,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
   /// 🔹 Fetch pending change requests (optionally filtered by approverRole)
   Future<List<dynamic>> _fetchPendingRequests({String? approverRole}) async {
     try {
-      String url = "http://localhost:5000/requests?status=pending";
+      String url = "https://march-livekit-proj.onrender.com/requests?status=pending";
       if (approverRole != null && approverRole.isNotEmpty) {
         url += "&approverRole=$approverRole";
       }
@@ -1020,7 +1020,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
   Future<void> _approveRequest(String requestId) async {
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:5000/requests/$requestId/approve'),
+        Uri.parse('https://march-livekit-proj.onrender.com/requests/$requestId/approve'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'resolvedBy':
@@ -1045,7 +1045,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
   Future<void> _declineRequest(String requestId) async {
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:5000/requests/$requestId/decline'),
+        Uri.parse('https://march-livekit-proj.onrender.com/requests/$requestId/decline'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'resolvedBy':

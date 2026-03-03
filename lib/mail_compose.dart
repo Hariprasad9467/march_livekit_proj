@@ -155,7 +155,7 @@ class _MailComposePanelState extends State<MailComposePanel> {
     // keep a local reference to the draft id so we can delete it after sending
     final String? draftIdToDelete = _editingDraftId;
 
-    var req = http.MultipartRequest("POST", Uri.parse("http://localhost:5000/api/mail/send"));
+    var req = http.MultipartRequest("POST", Uri.parse("https://march-livekit-proj.onrender.com/api/mail/send"));
     req.fields["from"] = from!;
     req.fields["to"] = jsonEncode(toList);
 
@@ -208,7 +208,7 @@ class _MailComposePanelState extends State<MailComposePanel> {
         // Attempt to delete server-side draft if we were editing one (use the captured id)
         if (draftIdToDelete != null) {
           try {
-            await http.delete(Uri.parse("http://localhost:5000/api/mail/draft/$draftIdToDelete/$from"));
+            await http.delete(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/draft/$draftIdToDelete/$from"));
           } catch (e) {
             debugPrint("Failed to delete draft after send: $e");
           }
@@ -258,7 +258,7 @@ class _MailComposePanelState extends State<MailComposePanel> {
     if (!hasContent) {
       if (_editingDraftId != null) {
         try {
-          await http.delete(Uri.parse("http://localhost:5000/api/mail/draft/$_editingDraftId/$from"));
+          await http.delete(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/draft/$_editingDraftId/$from"));
         } catch (e) {
           debugPrint("Delete empty draft error: $e");
         }
@@ -270,7 +270,7 @@ class _MailComposePanelState extends State<MailComposePanel> {
       return;
     }
 
-    var uri = Uri.parse("http://localhost:5000/api/mail/drafts/save");
+    var uri = Uri.parse("https://march-livekit-proj.onrender.com/api/mail/drafts/save");
     var req = http.MultipartRequest("POST", uri);
     if (_editingDraftId != null) req.fields["draftId"] = _editingDraftId!;
     req.fields["from"] = from;
@@ -345,7 +345,7 @@ class _MailComposePanelState extends State<MailComposePanel> {
           ...recipients.map((rec) {
             return Chip(
               avatar: CircleAvatar(
-                backgroundImage: rec["employeeImage"] != null ? NetworkImage("http://localhost:5000${rec['employeeImage']}") : const AssetImage("assets/profile.png") as ImageProvider,
+                backgroundImage: rec["employeeImage"] != null ? NetworkImage("https://march-livekit-proj.onrender.com${rec['employeeImage']}") : const AssetImage("assets/profile.png") as ImageProvider,
               ),
               label: Text("${rec['employeeName']} (${rec['employeeId']})"),
               deleteIcon: const Icon(Icons.close, size: 18),
@@ -363,7 +363,7 @@ class _MailComposePanelState extends State<MailComposePanel> {
               optionsBuilder: (value) async {
                 final query = value.text.trim();
                 if (query.isEmpty) return const Iterable.empty();
-                final res = await http.get(Uri.parse("http://localhost:5000/api/employees/search/$query"));
+                final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/employees/search/$query"));
                 if (res.statusCode != 200) return const Iterable.empty();
                 return (json.decode(res.body) as List).cast<Map<String, dynamic>>();
               },
@@ -698,7 +698,7 @@ class _InlineComposerState extends State<InlineComposer> {
     }
 
     setState(() => _inlineSending = true);
-    var req = http.MultipartRequest("POST", Uri.parse("http://localhost:5000/api/mail/send"));
+    var req = http.MultipartRequest("POST", Uri.parse("https://march-livekit-proj.onrender.com/api/mail/send"));
     req.fields["from"] = from;
     req.fields["to"] = jsonEncode(toList);
     req.fields["cc"] = jsonEncode(_inlineCcRecipients.map((r) => r['employeeId']).toList());
@@ -723,7 +723,7 @@ class _InlineComposerState extends State<InlineComposer> {
         // delete inline draft if present
         if (_editingInlineDraftId != null) {
           try {
-            await http.delete(Uri.parse("http://localhost:5000/api/mail/draft/$_editingInlineDraftId/$from"));
+            await http.delete(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/draft/$_editingInlineDraftId/$from"));
           } catch (e) {
             debugPrint("Failed to delete inline draft after send: $e");
           }
@@ -762,7 +762,7 @@ class _InlineComposerState extends State<InlineComposer> {
     if (!hasContent) {
       if (_editingInlineDraftId != null) {
         try {
-          await http.delete(Uri.parse("http://localhost:5000/api/mail/draft/$_editingInlineDraftId/$from"));
+          await http.delete(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/draft/$_editingInlineDraftId/$from"));
         } catch (e) {
           debugPrint("Delete empty inline draft error: $e");
         }
@@ -772,7 +772,7 @@ class _InlineComposerState extends State<InlineComposer> {
       return;
     }
 
-    var uri = Uri.parse("http://localhost:5000/api/mail/drafts/save");
+    var uri = Uri.parse("https://march-livekit-proj.onrender.com/api/mail/drafts/save");
     var req = http.MultipartRequest("POST", uri);
     if (_editingInlineDraftId != null) req.fields["draftId"] = _editingInlineDraftId!;
     req.fields["from"] = from;
@@ -980,7 +980,7 @@ Widget build(BuildContext context) {
 
                   try {
                     await http.delete(Uri.parse(
-                        "http://localhost:5000/api/mail/draft/$_editingInlineDraftId/$empId"));
+                        "https://march-livekit-proj.onrender.com/api/mail/draft/$_editingInlineDraftId/$empId"));
                   } catch (e) {
                     debugPrint(
                         "Failed to delete inline draft: $e");

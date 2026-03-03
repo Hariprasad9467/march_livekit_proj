@@ -219,7 +219,7 @@ class _SuperadminNotificationsPageState
   Future<void> _markAllAsRead() async {
     await http.put(
       Uri.parse(
-        "http://localhost:5000/notifications/mark-read/${widget.empId}",
+        "https://march-livekit-proj.onrender.com/notifications/mark-read/${widget.empId}",
       ),
     );
   }
@@ -295,7 +295,7 @@ class _SuperadminNotificationsPageState
   /// 🔹 Fetch SMS Notifications (Filtered by Year and Month)
   Future<void> fetchSmsNotifications() async {
     final uri = Uri.parse(
-      "http://localhost:5000/notifications/employee/${widget.empId}?month=$selectedMonth&year=$selectedYear&category=message",
+      "https://march-livekit-proj.onrender.com/notifications/employee/${widget.empId}?month=$selectedMonth&year=$selectedYear&category=message",
     );
     final resp = await http.get(uri);
 
@@ -330,7 +330,7 @@ class _SuperadminNotificationsPageState
 
     try {
       final response = await http.get(
-        Uri.parse("http://localhost:5000/api/employees/$partnerId"),
+        Uri.parse("https://march-livekit-proj.onrender.com/api/employees/$partnerId"),
       );
 
       if (response.statusCode == 200) {
@@ -364,7 +364,7 @@ class _SuperadminNotificationsPageState
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse("http://localhost:5000/notifications/with-files"),
+        Uri.parse("https://march-livekit-proj.onrender.com/notifications/with-files"),
       );
 
       // ✅ ADD FIELDS (Exclude message initially)
@@ -424,7 +424,7 @@ class _SuperadminNotificationsPageState
 
     try {
       final response = await http.put(
-        Uri.parse("http://localhost:5000/notifications/hide/$notificationId"),
+        Uri.parse("https://march-livekit-proj.onrender.com/notifications/hide/$notificationId"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({"empId": myId}),
       );
@@ -469,7 +469,7 @@ class _SuperadminNotificationsPageState
   Future<void> fetchPerformanceNotifications() async {
     // This route hits the 'performance/admin/:adminId' endpoint in your JS
     final uri = Uri.parse(
-      "http://localhost:5000/notifications/performance/admin/${widget.empId}?month=$selectedMonth&year=$selectedYear",
+      "https://march-livekit-proj.onrender.com/notifications/performance/admin/${widget.empId}?month=$selectedMonth&year=$selectedYear",
     );
 
     final resp = await http.get(uri);
@@ -490,7 +490,7 @@ class _SuperadminNotificationsPageState
   /// 🔹 Fetch All Holidays (Admin View)
   Future<void> fetchHolidayNotifications() async {
     final uri = Uri.parse(
-      "http://localhost:5000/notifications/holiday/admin/$selectedMonth?year=$selectedYear",
+      "https://march-livekit-proj.onrender.com/notifications/holiday/admin/$selectedMonth?year=$selectedYear",
     );
     final resp = await http.get(uri);
 
@@ -932,7 +932,7 @@ class _SuperadminNotificationsPageState
                                       "file";
 
                                   final String filePath =
-                                      "http://localhost:5000/uploads/notifications/${file['filename']}";
+                                      "https://march-livekit-proj.onrender.com/uploads/notifications/${file['filename']}";
 
                                   return GestureDetector(
                                     onTap: () =>

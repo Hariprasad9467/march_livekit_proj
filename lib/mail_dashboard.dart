@@ -210,7 +210,7 @@ class _MailDashboardState extends State<MailDashboard> {
     final user = Provider.of<UserProvider>(context, listen: false);
     final empId = user.employeeId;
     try {
-      final res = await http.get(Uri.parse("http://localhost:5000/api/mail/inbox/$empId"));
+      final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/inbox/$empId"));
       if (res.statusCode == 200) {
         setState(() {
           inbox = json.decode(res.body);
@@ -234,7 +234,7 @@ class _MailDashboardState extends State<MailDashboard> {
     final user = Provider.of<UserProvider>(context, listen: false);
     final empId = user.employeeId;
     try {
-      final res = await http.get(Uri.parse("http://localhost:5000/api/mail/sent/$empId"));
+      final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/sent/$empId"));
       if (res.statusCode == 200) {
         setState(() {
           sent = json.decode(res.body);
@@ -258,7 +258,7 @@ class _MailDashboardState extends State<MailDashboard> {
     final user = Provider.of<UserProvider>(context, listen: false);
     final empId = user.employeeId;
     try {
-      final res = await http.get(Uri.parse("http://localhost:5000/api/mail/trash/$empId"));
+      final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/trash/$empId"));
       if (res.statusCode == 200) {
         setState(() {
           trash = json.decode(res.body);
@@ -282,7 +282,7 @@ class _MailDashboardState extends State<MailDashboard> {
     final user = Provider.of<UserProvider>(context, listen: false);
     final empId = user.employeeId;
     try {
-      final res = await http.get(Uri.parse("http://localhost:5000/api/mail/drafts/$empId"));
+      final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/drafts/$empId"));
       if (res.statusCode == 200) {
         setState(() {
           drafts = json.decode(res.body);
@@ -313,7 +313,7 @@ class _MailDashboardState extends State<MailDashboard> {
     try {
       final user = Provider.of<UserProvider>(context, listen: false);
       final empId = user.employeeId;
-      final res = await http.get(Uri.parse("http://localhost:5000/api/mail/thread/$id/$empId"));
+      final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/thread/$id/$empId"));
       if (res.statusCode == 200) {
         final data = json.decode(res.body);
         setState(() {
@@ -338,7 +338,7 @@ class _MailDashboardState extends State<MailDashboard> {
     try {
       final user = Provider.of<UserProvider>(context, listen: false);
       final empId = user.employeeId;
-      final res = await http.put(Uri.parse("http://localhost:5000/api/mail/trash/$threadId/$empId"));
+      final res = await http.put(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/trash/$threadId/$empId"));
       if (res.statusCode == 200) {
         await loadInbox();
         await loadTrash();
@@ -357,7 +357,7 @@ class _MailDashboardState extends State<MailDashboard> {
     try {
       final user = Provider.of<UserProvider>(context, listen: false);
       final empId = user.employeeId;
-      final res = await http.put(Uri.parse("http://localhost:5000/api/mail/restore/$threadId/$empId"));
+      final res = await http.put(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/restore/$threadId/$empId"));
       if (res.statusCode == 200) {
         await loadTrash();
         await loadInbox();
@@ -376,7 +376,7 @@ class _MailDashboardState extends State<MailDashboard> {
     try {
       final user = Provider.of<UserProvider>(context, listen: false);
       final empId = user.employeeId;
-      final res = await http.delete(Uri.parse("http://localhost:5000/api/mail/delete-permanent/$threadId/$empId"));
+      final res = await http.delete(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/delete-permanent/$threadId/$empId"));
       if (res.statusCode == 200) {
         await loadTrash();
         setState(() => selectedMenu = 4);
@@ -1019,7 +1019,7 @@ class _MailDashboardState extends State<MailDashboard> {
                     final draftId = d['_id']?.toString();
                     if (draftId != null) {
                       try {
-                        final res = await http.get(Uri.parse("http://localhost:5000/api/mail/draft/$draftId"));
+                        final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/draft/$draftId"));
                         if (res.statusCode == 200) {
                           final dd = json.decode(res.body);
                           // Convert to recipient chip maps if needed
@@ -1055,7 +1055,7 @@ class _MailDashboardState extends State<MailDashboard> {
                     try {
                       final user = Provider.of<UserProvider>(context, listen: false);
                       final empId = user.employeeId;
-                      final res = await http.delete(Uri.parse("http://localhost:5000/api/mail/draft/$draftId/$empId"));
+                      final res = await http.delete(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/draft/$draftId/$empId"));
                       if (res.statusCode == 200) {
                         await loadDrafts();
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Draft deleted"), backgroundColor: Colors.green));
@@ -1073,7 +1073,7 @@ class _MailDashboardState extends State<MailDashboard> {
                 final draftId = d['_id']?.toString();
                 if (draftId != null) {
                   try {
-                    final res = await http.get(Uri.parse("http://localhost:5000/api/mail/draft/$draftId"));
+                    final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/mail/draft/$draftId"));
                     if (res.statusCode == 200) {
                       final dd = json.decode(res.body);
                       final toChips = (dd['to'] as List?)?.map<Map<String, dynamic>>((e) {
@@ -1285,7 +1285,7 @@ class _MailDashboardState extends State<MailDashboard> {
                                 ClipOval(
                                   child: (from['employeeImage'] != null)
                                       ? Image.network(
-                                          "http://localhost:5000${from['employeeImage']}",
+                                          "https://march-livekit-proj.onrender.com${from['employeeImage']}",
                                           width: 44,
                                           height: 44,
                                           fit: BoxFit.cover,
@@ -1372,7 +1372,7 @@ class _MailDashboardState extends State<MailDashboard> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: (msg["attachments"] as List).map<Widget>((file) {
                                             final filename = file["filename"] ?? file.toString().split("/").last;
-                                            final fileUrl = "http://localhost:5000/uploads/${file['filename'] ?? file['path']?.split('/')?.last}";
+                                            final fileUrl = "https://march-livekit-proj.onrender.com/uploads/${file['filename'] ?? file['path']?.split('/')?.last}";
                                             final originalName = file["originalName"] ?? filename;
                                             return ListTile(
                                               contentPadding: EdgeInsets.zero,
@@ -1431,7 +1431,7 @@ class _MailDashboardState extends State<MailDashboard> {
                 const SizedBox(height: 10),
                 ...((thread["attachments"] as List)).map<Widget>((file) {
                   final filename = file["filename"] ?? file.toString().split("/").last;
-                  final fileUrl = "http://localhost:5000/uploads/${file['filename'] ?? file['path']?.split('/')?.last}";
+                  final fileUrl = "https://march-livekit-proj.onrender.com/uploads/${file['filename'] ?? file['path']?.split('/')?.last}";
                   final originalName = file["originalName"] ?? filename;
                   return InkWell(
                     onTap: () async {

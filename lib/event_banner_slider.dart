@@ -58,7 +58,7 @@ class _EventBannerSliderState extends State<EventBannerSlider> {
 
       // --- Fetch employee birthdays & anniversaries ---
       final responseProfiles = await http.get(
-        Uri.parse('http://localhost:5000/profile'),
+        Uri.parse('https://march-livekit-proj.onrender.com/profile'),
       );
 
       // --- Fetch holidays for current month ---
@@ -81,7 +81,7 @@ class _EventBannerSliderState extends State<EventBannerSlider> {
         Uri.parse(
           // 'http://localhost:5000/notifications/holiday/employee/ALL?month=$currentMonthName',
           //),
-          'http://localhost:5000/notifications/holiday/employee/ALL?month=$currentMonthName&year=$currentYear',
+          'https://march-livekit-proj.onrender.com/notifications/holiday/employee/ALL?month=$currentMonthName&year=$currentYear',
         ),
       );
 
@@ -149,7 +149,7 @@ class _EventBannerSliderState extends State<EventBannerSlider> {
 
       // === 🏢 Company Events (from backend) ===
       final responseCompanyEvents = await http.get(
-        Uri.parse('http://localhost:5000/company-events'),
+        Uri.parse('https://march-livekit-proj.onrender.com/company-events'),
       );
 
       if (responseCompanyEvents.statusCode == 200) {

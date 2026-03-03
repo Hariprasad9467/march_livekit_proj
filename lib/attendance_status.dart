@@ -82,7 +82,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   /// Fetch today's attendance record & restore UI state.
   Future<void> fetchLatestStatus() async {
     final employeeId = Provider.of<UserProvider>(context, listen: false).employeeId ?? '';
-    var url = Uri.parse('http://localhost:5000/attendance/attendance/status/$employeeId');
+    var url = Uri.parse('https://march-livekit-proj.onrender.com/attendance/attendance/status/$employeeId');
 
     try {
       var response = await http.get(url);
@@ -173,7 +173,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
       try {
         final employeeId = Provider.of<UserProvider>(context, listen: false).employeeId ?? '';
-        final url = Uri.parse('http://localhost:5000/attendance/attendance/status/$employeeId');
+        final url = Uri.parse('https://march-livekit-proj.onrender.com/attendance/attendance/status/$employeeId');
         final response = await http.get(url);
         if (response.statusCode != 200) return;
         final data = jsonDecode(response.body);
@@ -220,7 +220,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   // POST new login (unchanged)
   Future<void> postAttendanceData() async {
     final employeeId = Provider.of<UserProvider>(context, listen: false).employeeId ?? '';
-    var url = Uri.parse('http://localhost:5000/attendance/attendance/mark/$employeeId');
+    var url = Uri.parse('https://march-livekit-proj.onrender.com/attendance/attendance/mark/$employeeId');
 
     var body = {
       'date': getCurrentDate(),
@@ -245,7 +245,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   // PUT update (logout/break) general (unchanged)
   Future<void> updateAttendanceData({bool isLogout = false}) async {
     final employeeId = Provider.of<UserProvider>(context, listen: false).employeeId ?? '';
-    var url = Uri.parse('http://localhost:5000/attendance/attendance/update/$employeeId');
+    var url = Uri.parse('https://march-livekit-proj.onrender.com/attendance/attendance/update/$employeeId');
 
     var body = {
       'date': getCurrentDate(),
@@ -273,7 +273,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   Future<void> fetchAttendanceHistory() async {
     try {
       final employeeId = Provider.of<UserProvider>(context, listen: false).employeeId ?? '';
-      var url = Uri.parse('http://localhost:5000/attendance/attendance/history/$employeeId');
+      var url = Uri.parse('https://march-livekit-proj.onrender.com/attendance/attendance/history/$employeeId');
       var response = await http.get(url);
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
@@ -432,7 +432,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       });
 
       try {
-        var url = Uri.parse('http://localhost:5000/attendance/attendance/update/$employeeId');
+        var url = Uri.parse('https://march-livekit-proj.onrender.com/attendance/attendance/update/$employeeId');
         var body = jsonEncode({'date': getCurrentDate(), 'breakTime': currentTime, 'breakStatus': 'BreakIn', 'status': 'Break'});
         var response = await http.put(url, body: body, headers: {'Content-Type': 'application/json'});
 
@@ -518,7 +518,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     });
 
     try {
-      var url = Uri.parse('http://localhost:5000/attendance/attendance/update/$employeeId');
+      var url = Uri.parse('https://march-livekit-proj.onrender.com/attendance/attendance/update/$employeeId');
       var body = jsonEncode({'date': getCurrentDate(), 'breakTime': breakEnd, 'breakStatus': 'BreakOff', 'status': 'Login'});
       var response = await http.put(url, body: body, headers: {'Content-Type': 'application/json'});
 

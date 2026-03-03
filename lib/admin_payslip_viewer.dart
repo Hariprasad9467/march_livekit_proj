@@ -140,7 +140,7 @@ class _AdminPayslipViewerState extends State<AdminPayslipViewer> {
         return;
       }
       try {
-        final res = await http.get(Uri.parse("http://localhost:5000/api/employees/search/$query"));
+        final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/employees/search/$query"));
         if (res.statusCode == 200) {
           setState(() {
             _searchResults = jsonDecode(res.body);
@@ -197,15 +197,15 @@ class _AdminPayslipViewerState extends State<AdminPayslipViewer> {
     final year = int.parse(selectedYear);
 
     final resAttendance = await http.get(Uri.parse(
-      "http://localhost:5000/attendance/attendance/month?year=$year&month=$monthIndex",
+      "https://march-livekit-proj.onrender.com/attendance/attendance/month?year=$year&month=$monthIndex",
     ));
 
     final resLeaves = await http.get(Uri.parse(
-      "http://localhost:5000/apply/approved/month?year=$year&month=$monthIndex",
+      "https://march-livekit-proj.onrender.com/apply/approved/month?year=$year&month=$monthIndex",
     ));
 
     final resHolidays = await http.get(Uri.parse(
-      "http://localhost:5000/notifications/holiday/employee/ADMIN?month=$selectedMonth&year=$year",
+      "https://march-livekit-proj.onrender.com/notifications/holiday/employee/ADMIN?month=$selectedMonth&year=$year",
     ));
 
     List<Map<String, dynamic>> monthlyAttendance = [];
@@ -335,7 +335,7 @@ class _AdminPayslipViewerState extends State<AdminPayslipViewer> {
     if (employeeId == null) return;
 
     final url = Uri.parse(
-      'http://localhost:5000/get-payslip-details?employee_id=$employeeId&year=$selectedYear&month=$selectedMonth',
+      'https://march-livekit-proj.onrender.com/get-payslip-details?employee_id=$employeeId&year=$selectedYear&month=$selectedMonth',
     );
 
     try {

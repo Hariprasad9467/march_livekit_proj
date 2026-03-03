@@ -17,7 +17,7 @@ class LeaveApprovalPage extends StatefulWidget {
 }
 
 class _LeaveApprovalPageState extends State<LeaveApprovalPage> {
-  final String apiUrl = "http://localhost:5000/apply";
+  final String apiUrl = "https://march-livekit-proj.onrender.com/apply";
 
   final ValueNotifier<List<dynamic>> filteredLeavesNotifier = ValueNotifier([]);
   String selectedFilter = "Pending";

@@ -51,7 +51,7 @@ class _SidebarState extends State<Sidebar> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:5000/api/employees/$employeeId'),
+        Uri.parse('https://march-livekit-proj.onrender.com/api/employees/$employeeId'),
       );
 
       if (response.statusCode == 200) {
@@ -279,7 +279,7 @@ class _SidebarState extends State<Sidebar> {
             ListTile(
               leading: CircleAvatar(
                 backgroundImage: (employeeImage != null && employeeImage!.isNotEmpty)
-                    ? NetworkImage("http://localhost:5000$employeeImage")
+                    ? NetworkImage("https://march-livekit-proj.onrender.com$employeeImage")
                     : const AssetImage('assets/profile.png') as ImageProvider,
               ),
               title: Text(

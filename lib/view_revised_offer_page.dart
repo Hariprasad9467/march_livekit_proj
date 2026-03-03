@@ -64,7 +64,7 @@ class _ViewRevisedOfferPageState extends State<ViewRevisedOfferPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:5000/api/revisedofferletter'),
+        Uri.parse('https://march-livekit-proj.onrender.com/api/revisedofferletter'),
       );
 
       if (response.statusCode == 200) {
@@ -197,7 +197,7 @@ class _ViewRevisedOfferPageState extends State<ViewRevisedOfferPage> {
 
     try {
       final response = await http.delete(
-        Uri.parse('http://localhost:5000/api/revisedofferletter/$id'),
+        Uri.parse('https://march-livekit-proj.onrender.com/api/revisedofferletter/$id'),
       );
 
       if (!mounted) return;
@@ -348,7 +348,7 @@ class _ViewRevisedOfferPageState extends State<ViewRevisedOfferPage> {
       final body = {...updatedData, 'pdfFile': pdfBase64};
 
       final response = await http.put(
-        Uri.parse('http://localhost:5000/api/revisedofferletter/$id'),
+        Uri.parse('https://march-livekit-proj.onrender.com/api/revisedofferletter/$id'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(body),
       );

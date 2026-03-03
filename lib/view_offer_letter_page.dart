@@ -79,7 +79,7 @@ class _ViewOfferLetterPageState extends State<ViewOfferLetterPage> {
 
   Future<void> fetchLetters() async {
     try {
-      final res = await http.get(Uri.parse("http://localhost:5000/api/offerletter"));
+      final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/offerletter"));
       if (res.statusCode == 200) {
         final Map<String, dynamic> body = jsonDecode(res.body);
         if (body["success"] == true) {
@@ -259,7 +259,7 @@ Future<void> _shareSingle(Map<String, dynamic> item) async {
 
   // Build a safe PDF URL
   final pdfUrlRaw = (item['pdfUrl'] ?? '').toString();
-  final pdfUrl = pdfUrlRaw.startsWith('http') ? pdfUrlRaw : 'http://localhost:5000$pdfUrlRaw';
+  final pdfUrl = pdfUrlRaw.startsWith('http') ? pdfUrlRaw : 'https://march-livekit-proj.onrender.com$pdfUrlRaw';
 
   // Name & Position
   final name = (item['fullName'] ?? item['name'] ?? '').toString().trim();
@@ -348,7 +348,7 @@ SKCL Tech Square
     final rawName = (item['fullName'] ?? 'offerletter').toString();
     final safeName = rawName.replaceAll(RegExp(r'[^A-Za-z0-9_]'), '_');
     final filename = '${safeName}_Offerletter.pdf';
-    final downloadUri = Uri.parse('http://localhost:5000/api/offerletter/download/$id');
+    final downloadUri = Uri.parse('https://march-livekit-proj.onrender.com/api/offerletter/download/$id');
 
     try {
       if (kIsWeb) {
@@ -461,7 +461,7 @@ Future<void> _shareSelectedRecords() async {
                   final fullName = (item['fullName'] ?? item['name'] ?? 'offerletter').toString();
                   final safeName = fullName.replaceAll(RegExp(r'[^A-Za-z0-9_]'), '_');
                   final filename = '${safeName}_Offerletter.pdf';
-                  final downloadUri = Uri.parse('http://localhost:5000/api/offerletter/download/$recordId');
+                  final downloadUri = Uri.parse('https://march-livekit-proj.onrender.com/api/offerletter/download/$recordId');
 
                   if (kIsWeb) {
                     if (await canLaunchUrl(downloadUri)) {
@@ -499,7 +499,7 @@ Future<void> _shareSelectedRecords() async {
         return;
       }
 
-      final fullUrl = Uri.parse("http://localhost:5000$pdfUrl");
+      final fullUrl = Uri.parse("https://march-livekit-proj.onrender.com$pdfUrl");
       final response = await http.get(fullUrl);
       final pdfBytes = response.bodyBytes;
       if (!mounted) return;
@@ -528,7 +528,7 @@ Future<void> _shareSelectedRecords() async {
                   final rawName = (item['fullName'] ?? 'offerletter').toString();
                   final safeName = rawName.replaceAll(RegExp(r'[^A-Za-z0-9_]'), '_');
                   final filename = '${safeName}_Offerletter.pdf';
-                  final downloadUri = Uri.parse('http://localhost:5000/api/offerletter/download/${item["_id"]}');
+                  final downloadUri = Uri.parse('https://march-livekit-proj.onrender.com/api/offerletter/download/${item["_id"]}');
 
                   if (kIsWeb) {
                     if (await canLaunchUrl(downloadUri)) {
@@ -537,7 +537,7 @@ Future<void> _shareSelectedRecords() async {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cannot open download URL")));
                     }
                   } else {
-                    final response = await http.get(Uri.parse("http://localhost:5000${item['pdfUrl']}"));
+                    final response = await http.get(Uri.parse("https://march-livekit-proj.onrender.com${item['pdfUrl']}"));
                     final bytes = response.bodyBytes;
                     await Printing.sharePdf(bytes: bytes, filename: filename);
                   }

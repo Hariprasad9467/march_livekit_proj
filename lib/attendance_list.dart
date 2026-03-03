@@ -83,7 +83,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   /// ---------------- EMPLOYEES ----------------
   Future<void> fetchEmployees() async {
     final res = await http.get(
-      Uri.parse("http://localhost:5000/api/employees"),
+      Uri.parse("https://march-livekit-proj.onrender.com/api/employees"),
     );
     if (res.statusCode == 200) {
       employees = List<Map<String, dynamic>>.from(json.decode(res.body));
@@ -95,7 +95,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   Future<void> fetchMonthlyAttendance() async {
     final res = await http.get(
       Uri.parse(
-        "http://localhost:5000/attendance/attendance/month"
+        "https://march-livekit-proj.onrender.com/attendance/attendance/month"
         "?year=$selectedYear&month=$selectedMonthIndex",
       ),
     );
@@ -111,7 +111,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   Future<void> fetchApprovedLeaves() async {
     final res = await http.get(
       Uri.parse(
-        "http://localhost:5000/apply/approved/month"
+        "https://march-livekit-proj.onrender.com/apply/approved/month"
         "?year=$selectedYear&month=$selectedMonthIndex",
       ),
     );

@@ -119,7 +119,7 @@ class _MsgPageState extends State<MsgPage> {
   Future<void> fetchAllEmployees() async {
     try {
       final res = await http.get(
-        Uri.parse("http://localhost:5000/api/employees"),
+        Uri.parse("https://march-livekit-proj.onrender.com/api/employees"),
       );
 
       if (res.statusCode == 200) {
@@ -254,7 +254,7 @@ class _MsgPageState extends State<MsgPage> {
 
         var request = http.MultipartRequest(
           'POST',
-          Uri.parse("http://localhost:5000/notifications/with-files"),
+          Uri.parse("https://march-livekit-proj.onrender.com/notifications/with-files"),
         );
 
         request.fields.addAll({
@@ -277,7 +277,7 @@ class _MsgPageState extends State<MsgPage> {
 
         for (final file in attachments) {
           final fileUrl =
-              "http://localhost:5000/${file['path'].replaceAll('\\', '/')}";
+              "https://march-livekit-proj.onrender.com/${file['path'].replaceAll('\\', '/')}";
 
           final response = await http.get(Uri.parse(fileUrl));
           if (response.statusCode == 200) {
@@ -358,7 +358,7 @@ class _MsgPageState extends State<MsgPage> {
     try {
       final res = await http.put(
         Uri.parse(
-          "http://localhost:5000/notifications/chat-conversation/$myId/$_selectedEmployeeId/delete-for-me",
+          "https://march-livekit-proj.onrender.com/notifications/chat-conversation/$myId/$_selectedEmployeeId/delete-for-me",
         ),
         headers: {"Content-Type": "application/json"},
         body: json.encode({"messageIds": _selectedMessageIds.toList()}),
@@ -383,7 +383,7 @@ class _MsgPageState extends State<MsgPage> {
     try {
       final res = await http.put(
         Uri.parse(
-          "http://localhost:5000/notifications/chat-conversation/$myId/$_selectedEmployeeId/delete-messages",
+          "https://march-livekit-proj.onrender.com/notifications/chat-conversation/$myId/$_selectedEmployeeId/delete-messages",
         ),
         headers: {"Content-Type": "application/json"},
         body: json.encode({"messageIds": _selectedMessageIds.toList()}),
@@ -437,7 +437,7 @@ class _MsgPageState extends State<MsgPage> {
     try {
       final response = await http.get(
         Uri.parse(
-          "http://localhost:5000/notifications/employee/$myId?source=chat",
+          "https://march-livekit-proj.onrender.com/notifications/employee/$myId?source=chat",
         ),
       );
 
@@ -507,7 +507,7 @@ class _MsgPageState extends State<MsgPage> {
 
       try {
         final response = await http.get(
-          Uri.parse("http://localhost:5000/api/employees/$partnerId"),
+          Uri.parse("https://march-livekit-proj.onrender.com/api/employees/$partnerId"),
         );
 
         if (response.statusCode == 200) {
@@ -534,7 +534,7 @@ class _MsgPageState extends State<MsgPage> {
     if (_selectedEmployeeId == null) return;
     try {
       final response = await http.get(
-        Uri.parse("http://localhost:5000/api/employees/$_selectedEmployeeId"),
+        Uri.parse("https://march-livekit-proj.onrender.com/api/employees/$_selectedEmployeeId"),
       );
       if (response.statusCode == 200) {
         setState(() {
@@ -566,7 +566,7 @@ class _MsgPageState extends State<MsgPage> {
     try {
       final response = await http.get(
         Uri.parse(
-          "http://localhost:5000/notifications/chat-conversation/$myId/$_selectedEmployeeId",
+          "https://march-livekit-proj.onrender.com/notifications/chat-conversation/$myId/$_selectedEmployeeId",
         ),
       );
 
@@ -707,7 +707,7 @@ class _MsgPageState extends State<MsgPage> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse("http://localhost:5000/notifications/with-files"),
+        Uri.parse("https://march-livekit-proj.onrender.com/notifications/with-files"),
       );
 
       request.fields.addAll({
@@ -1051,7 +1051,7 @@ class _MsgPageState extends State<MsgPage> {
                         (employeeData?['employeeImage'] != null &&
                             employeeData!['employeeImage'].isNotEmpty)
                         ? NetworkImage(
-                            "http://localhost:5000${employeeData!['employeeImage']}",
+                            "https://march-livekit-proj.onrender.com${employeeData!['employeeImage']}",
                           )
                         : const AssetImage("assets/profile.png")
                               as ImageProvider,
@@ -1379,7 +1379,7 @@ class _MsgPageState extends State<MsgPage> {
                                                   file['filename'],
                                                 );
                                                 final url =
-                                                    "http://localhost:5000/${file['path'].replaceAll('\\', '/')}";
+                                                    "https://march-livekit-proj.onrender.com/${file['path'].replaceAll('\\', '/')}";
                                                 return Padding(
                                                   padding:
                                                       const EdgeInsets.only(

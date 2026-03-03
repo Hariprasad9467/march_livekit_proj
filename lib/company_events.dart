@@ -74,7 +74,7 @@ class _CompanyEventsScreenState extends State<CompanyEventsScreen> {
   Future<void> _fetchEvents() async {
     try {
       final response =
-          await http.get(Uri.parse('http://localhost:5000/company-events'));
+          await http.get(Uri.parse('https://march-livekit-proj.onrender.com/company-events'));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -201,8 +201,8 @@ class _CompanyEventsScreenState extends State<CompanyEventsScreen> {
               );
 
               final url = isEditing
-                  ? 'http://localhost:5000/company-events/${event.id}'
-                  : 'http://localhost:5000/company-events';
+                  ? 'https://march-livekit-proj.onrender.com/company-events/${event.id}'
+                  : 'https://march-livekit-proj.onrender.com/company-events';
               final method = isEditing ? 'PUT' : 'POST';
 
               final response = await (method == 'POST'
@@ -227,7 +227,7 @@ class _CompanyEventsScreenState extends State<CompanyEventsScreen> {
 
   Future<void> _deleteEvent(String id) async {
     final response =
-        await http.delete(Uri.parse('http://localhost:5000/company-events/$id'));
+        await http.delete(Uri.parse('https://march-livekit-proj.onrender.com/company-events/$id'));
     if (response.statusCode == 200) {
       _fetchEvents();
     }
