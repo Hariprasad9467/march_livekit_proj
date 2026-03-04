@@ -60,7 +60,7 @@ const corsOptions = {
     "https://march-livekit-proj.onrender.com",
     "http://localhost:5000",
   ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
 };
 app.use(cors(corsOptions));
