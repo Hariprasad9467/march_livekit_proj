@@ -92,7 +92,8 @@ router.put("/attendance/update/:employeeId", async (req, res) => {
   let { date, logoutTime, breakTime, breakStatus, loginReason, logoutReason, status } = req.body;
 
   try {
-    date = formatDateToDDMMYYYY(date || undefined);
+    //date = formatDateToDDMMYYYY(date || undefined);
+    date = date || formatDateToDDMMYYYY();
     const todayRecord = await Attendance.findOne({ employeeId, date });
     if (!todayRecord) return res.status(404).json({ message: "❌ Attendance not found" });
 
@@ -122,7 +123,7 @@ router.put("/attendance/update/:employeeId", async (req, res) => {
 
     // --- BreakIn: Start break (do NOT block when total >= 60) ---
     if (breakStatus === "BreakIn") {
-      let totalMinutes = computeStoredTotal(todayRecord.breakTime);
+      //let totalMinutes = computeStoredTotal(todayRecord.breakTime);
 
       // Use server timestamp to start break
       const serverStart = serverNowFormatted();
@@ -130,13 +131,12 @@ router.put("/attendance/update/:employeeId", async (req, res) => {
       todayRecord.status = "Break";
       await todayRecord.save();
 
-      return res.json({
-        message: "⏸ Break started",
-        breakInProgress: todayRecord.breakInProgress,
-        totalMinutes,
-        // limitReached is only informational now, not an error block
-        limitReached: totalMinutes >= 60
-      });
+       return res.status(200).json({
+    message: "⏸ Break started",
+    breakInProgress: serverStart,
+    totalMinutes: computeStoredTotal(todayRecord.breakTime),
+    limitReached: false
+  });
     }
 
     // --- BreakOff: finalize break and calculate total (allow totals > 60) ---
