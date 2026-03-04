@@ -48,6 +48,7 @@ class Employee {
   final String ifscCode;
   final String bankAccountNumber;
   final String bankAccountType;
+  final String location;
 
   final String education10;
   final String education12;
@@ -106,6 +107,7 @@ class Employee {
     required this.ifscCode,
     required this.bankAccountNumber,
     required this.bankAccountType,
+    required this.location,
     required this.education10,
     required this.education12,
     required this.ugCertificate,
@@ -161,6 +163,7 @@ class Employee {
       ifscCode: json['ifsc_code'] ?? '',
       bankAccountNumber: json['bank_account_number'] ?? '',
       bankAccountType: json['bank_account_type'] ?? '',
+      location: json['location'] ?? '',
 
       // 🔹 Education values
       education10: json['education10'] ?? '',
@@ -219,6 +222,7 @@ class Employee {
     'ifsc_code': ifscCode,
     'bank_account_number': bankAccountNumber,
     'bank_account_type': bankAccountType,
+    'bank_location': location,
     // 🔴 ADDED: include password when converting back to JSON if needed
     'password': password, // 🔴 ADDED
   };
@@ -279,9 +283,10 @@ class EmployeeProfilePage extends StatefulWidget {
 
 class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
   String? get currentEmployeeId {
-  return widget.overrideEmployeeId ??
-      Provider.of<UserProvider>(context, listen: false).employeeId;
-}
+    return widget.overrideEmployeeId ??
+        Provider.of<UserProvider>(context, listen: false).employeeId;
+  }
+
   Employee? employee;
   bool isLoading = true;
   String? _profileImageUrl;
@@ -297,6 +302,114 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
       fetchEmployee();
       _fetchProfileImage();
     });
+  }
+
+  String? _validateField(String field, String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return "This field is required";
+    }
+
+    switch (field) {
+      case "mobile_number":
+      case "alternative_mobile":
+        if (!RegExp(r'^[6-9]\d{9}$').hasMatch(value)) {
+          return "Enter valid 10-digit mobile number";
+        }
+        break;
+
+      case "aadhar_number":
+        if (!RegExp(r'^\d{12}$').hasMatch(value)) {
+          return "Aadhar must be 12 digits";
+        }
+        break;
+
+      case "pan_number":
+        if (!RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]{1}$').hasMatch(value)) {
+          return "Invalid PAN format";
+        }
+        break;
+
+      case "ifsc_code":
+        if (!RegExp(r'^[A-Z]{4}0[A-Z0-9]{6}$').hasMatch(value)) {
+          return "Invalid IFSC code";
+        }
+        break;
+
+      case "bank_account_number":
+        if (!RegExp(r'^\d{9,18}$').hasMatch(value)) {
+          return "Invalid account number";
+        }
+        break;
+
+      case "dob":
+        if (!RegExp(r'^\d{2}-\d{2}-\d{4}$').hasMatch(value)) {
+          return "Use format DD-MM-YYYY";
+        }
+        break;
+    }
+
+    return null;
+  }
+
+  List<TextInputFormatter>? _getInputFormatters(String field) {
+    switch (field) {
+      case "gender":
+      case "father_or_husband_name":
+      case "marital_status":
+      case "bank_name":
+      case "bank_account_type":
+        return [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))];
+      case "bank_location":
+        return [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))];
+
+      case "mobile_number":
+      case "alternative_mobile":
+        return [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(10),
+        ];
+
+      case "aadhar_number":
+        return [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(12),
+        ];
+
+      case "bank_account_number":
+        return [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(30),
+        ];
+      case "blood_group":
+        return [
+          FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z+-]')),
+          LengthLimitingTextInputFormatter(3),
+        ];
+
+      case "uan_number":
+        return [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(12),
+        ];
+      case "pan_number":
+      case "ifsc_code":
+        return [
+          FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]')),
+          LengthLimitingTextInputFormatter(20),
+        ];
+
+      case "email_id":
+        return null;
+
+      case "dob":
+        return [
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9-]')),
+          LengthLimitingTextInputFormatter(10),
+        ];
+
+      default:
+        return [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s]'))];
+    }
   }
 
   Future<void> fetchEmployee() async {
@@ -330,7 +443,9 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
     final id = currentEmployeeId;
     if (id == null) return;
     try {
-      final res = await http.get(Uri.parse("https://march-livekit-proj.onrender.com/api/employees/$id"));
+      final res = await http.get(
+        Uri.parse("https://march-livekit-proj.onrender.com/api/employees/$id"),
+      );
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         setState(() {
@@ -355,7 +470,7 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
 
     if (result != null) {
       final file = result.files.single;
-      
+
       try {
         var request = http.MultipartRequest(
           'PUT',
@@ -373,10 +488,7 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
           );
         } else if (file.path != null) {
           request.files.add(
-            await http.MultipartFile.fromPath(
-              'employeeImage',
-              file.path!,
-            ),
+            await http.MultipartFile.fromPath('employeeImage', file.path!),
           );
         }
 
@@ -390,11 +502,15 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
           _fetchProfileImage(); // Refresh image
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ Failed to update image: ${response.body}")),
+            SnackBar(
+              content: Text("❌ Failed to update image: ${response.body}"),
+            ),
           );
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("❌ Error: $e")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("❌ Error: $e")));
       }
     }
   }
@@ -445,36 +561,37 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
       ).showSnackBar(SnackBar(content: Text('❌ Error: $e')));
     }
   }
-/// 🔹 Directly save profile field (no approval)
-Future<void> saveEmployeeField(String field, String newValue) async {
-  final employeeId =
-      currentEmployeeId;
 
-  if (employeeId == null) return;
+  /// 🔹 Directly save profile field (no approval)
+  Future<void> saveEmployeeField(String field, String newValue) async {
+    final employeeId = currentEmployeeId;
 
-  try {
-    final response = await http.patch(
-      Uri.parse('https://march-livekit-proj.onrender.com/profile/$employeeId'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({field: newValue}),
-    );
+    if (employeeId == null) return;
 
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("✅ $field updated successfully")),
+    try {
+      final response = await http.patch(
+        Uri.parse('https://march-livekit-proj.onrender.com/profile/$employeeId'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({field: newValue}),
       );
-      fetchEmployee(); // refresh profile
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Failed to update $field")),
-      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("✅ $field updated successfully")),
+        );
+        fetchEmployee(); // refresh profile
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("❌ Failed to update $field")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ Error: $e")));
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("❌ Error: $e")),
-    );
   }
-}
+
   /// 🔹 Upload documents
   Future<void> _handleUpload(String docType) async {
     final result = await FilePicker.platform.pickFiles(
@@ -566,25 +683,23 @@ Future<void> saveEmployeeField(String field, String newValue) async {
       ).showSnackBar(SnackBar(content: Text("❌ Upload error: $e")));
     }
   }
-Future<void> _downloadPDF() async {
-  final id = currentEmployeeId;
-  if (id == null) return;
 
-  final url = Uri.parse(
-    "https://march-livekit-proj.onrender.com/profile/$id/download",
-  );
-  await launchUrl(url, mode: LaunchMode.externalApplication);
-}
+  Future<void> _downloadPDF() async {
+    final id = currentEmployeeId;
+    if (id == null) return;
 
-Future<void> _exportExcel() async {
-  final id = currentEmployeeId;
-  if (id == null) return;
+    final url = Uri.parse("https://march-livekit-proj.onrender.com/profile/$id/download");
+    await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
 
-  final url = Uri.parse(
-    "https://march-livekit-proj.onrender.com/profile/$id/excel",
-  );
-  await launchUrl(url, mode: LaunchMode.externalApplication);
-}
+  Future<void> _exportExcel() async {
+    final id = currentEmployeeId;
+    if (id == null) return;
+
+    final url = Uri.parse("https://march-livekit-proj.onrender.com/profile/$id/excel");
+    await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+
   /// 🔹 Map UI labels to backend field names
   String _mapDocTypeToField(String docType) {
     switch (docType) {
@@ -618,21 +733,62 @@ Future<void> _exportExcel() async {
     String field,
     String currentValue,
     void Function(String) onSubmit,
-    bool requiresApproval,  
+    bool requiresApproval,
   ) {
     final controller = TextEditingController(text: currentValue);
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title: Text('Edit $label', style: const TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: "Enter new $label",
-            hintStyle: const TextStyle(color: Colors.white54),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            style: const TextStyle(color: Colors.white),
+
+            // ✅ Make DOB read-only
+            readOnly: field == "dob",
+
+            // ✅ Remove input formatter for DOB
+            inputFormatters: field == "dob" ? null : _getInputFormatters(field),
+
+            decoration: InputDecoration(
+              hintText: field == "dob"
+                  ? "Select Date (DD-MM-YYYY)"
+                  : "Enter $label",
+              hintStyle: const TextStyle(color: Colors.white54),
+              suffixIcon: field == "dob"
+                  ? const Icon(Icons.calendar_today, color: Colors.white70)
+                  : null,
+            ),
+
+            validator: (value) => _validateField(field, value),
+
+            // ✅ OPEN DATE PICKER WHEN DOB CLICKED
+            onTap: field == "dob"
+                ? () async {
+                    FocusScope.of(context).requestFocus(FocusNode());
+
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate:
+                          DateTime.tryParse(controller.text) ?? DateTime(2000),
+                      firstDate: DateTime(1950),
+                      lastDate: DateTime.now(),
+                    );
+
+                    if (pickedDate != null) {
+                      String formatted =
+                          "${pickedDate.day.toString().padLeft(2, '0')}-"
+                          "${pickedDate.month.toString().padLeft(2, '0')}-"
+                          "${pickedDate.year}";
+                      controller.text = formatted;
+                    }
+                  }
+                : null,
           ),
         ),
         actions: [
@@ -642,8 +798,10 @@ Future<void> _exportExcel() async {
           ),
           ElevatedButton(
             onPressed: () {
-              onSubmit(controller.text);
-              Navigator.pop(context);
+              if (formKey.currentState!.validate()) {
+                onSubmit(controller.text.trim());
+                Navigator.pop(context);
+              }
             },
             child: Text(requiresApproval ? "Request" : "Save"),
           ),
@@ -867,14 +1025,15 @@ Future<void> _exportExcel() async {
                 if (!widget.readOnly && editable)
                   IconButton(
                     icon: const Icon(Icons.edit, size: 18, color: Colors.grey),
-                    onPressed: () =>
-                        _showEditDialog(label, field, value, (newValue) {
-                          if (requiresApproval) {
-        updateEmployeeField(field, newValue); // request to HR
-      } else {
-        saveEmployeeField(field, newValue);   // direct save
-      }
-                        }, requiresApproval, ),
+                    onPressed: () => _showEditDialog(label, field, value, (
+                      newValue,
+                    ) {
+                      if (requiresApproval) {
+                        updateEmployeeField(field, newValue); // request to HR
+                      } else {
+                        saveEmployeeField(field, newValue); // direct save
+                      }
+                    }, requiresApproval),
                   ),
                 if (!widget.readOnly && showUpload && docType != null)
                   ElevatedButton.icon(
@@ -940,35 +1099,35 @@ Future<void> _exportExcel() async {
             ],
           ),
           trailing: widget.readOnly
-    ? null
-    : Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.amber),
-            onPressed: () => _showEditExperienceDialog(exp),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.redAccent),
-            onPressed: () => _deleteExperience(exp),
-          ),
-        ],
-      ),
+              ? null
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.amber),
+                      onPressed: () => _showEditExperienceDialog(exp),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.redAccent),
+                      onPressed: () => _deleteExperience(exp),
+                    ),
+                  ],
+                ),
         ),
       const SizedBox(height: 10),
       if (!widget.readOnly)
-      Align(
-        alignment: Alignment.centerLeft,
-        child: ElevatedButton.icon(
-          onPressed: _showAddExperienceDialog,
-          icon: const Icon(Icons.add),
-          label: const Text("Add Experience"),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.deepPurple,
-            foregroundColor: Colors.white,
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ElevatedButton.icon(
+            onPressed: _showAddExperienceDialog,
+            icon: const Icon(Icons.add),
+            label: const Text("Add Experience"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+            ),
           ),
         ),
-      ),
     ]);
   }
 
@@ -1210,85 +1369,85 @@ Future<void> _exportExcel() async {
   }
 
   Widget _buildHeader() {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Row(
-        children: [
-          Stack(
-            children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: Colors.white10,
-                backgroundImage: _profileImageUrl != null
-                    ? NetworkImage("https://march-livekit-proj.onrender.com$_profileImageUrl")
-                    : null,
-                child: _profileImageUrl == null
-                    ? const Icon(Icons.person, size: 36, color: Colors.white)
-                    : null,
-              ),
-              if (!widget.readOnly)
-                Positioned(
-                  bottom: -5,
-                  right: -5,
-                  child: IconButton(
-                    icon: const Icon(Icons.camera_alt, size: 20, color: Colors.blueAccent),
-                    onPressed: _pickAndUploadProfileImage,
-                    tooltip: "Change Profile Image",
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white, 
-                      padding: const EdgeInsets.all(4),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                employee?.fullName ?? 'Name',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                "Employee ID: ${employee?.id ?? 'N/A'}",
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ],
-          ),
-        ],
-      ),
-
-      if (widget.readOnly) // Show only for HR
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
         Row(
           children: [
-            ElevatedButton.icon(
-              onPressed: _downloadPDF,
-              icon: const Icon(Icons.picture_as_pdf),
-              label: const Text("PDF"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.white10,
+                  backgroundImage: _profileImageUrl != null
+                      ? NetworkImage("https://march-livekit-proj.onrender.com$_profileImageUrl")
+                      : null,
+                  child: _profileImageUrl == null
+                      ? const Icon(Icons.person, size: 36, color: Colors.white)
+                      : null,
+                ),
+                if (!widget.readOnly)
+                  Positioned(
+                    bottom: -5,
+                    right: -5,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.camera_alt,
+                        size: 20,
+                        color: Colors.blueAccent,
+                      ),
+                      onPressed: _pickAndUploadProfileImage,
+                      tooltip: "Change Profile Image",
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets.all(4),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            const SizedBox(width: 10),
-            ElevatedButton.icon(
-              onPressed: _exportExcel,
-              icon: const Icon(Icons.table_chart),
-              label: const Text("Excel"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-              ),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  employee?.fullName ?? 'Name',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  "Employee ID: ${employee?.id ?? 'N/A'}",
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
             ),
           ],
         ),
-    ],
-  );
-}
+
+        if (widget.readOnly) // Show only for HR
+          Row(
+            children: [
+              ElevatedButton.icon(
+                onPressed: _downloadPDF,
+                icon: const Icon(Icons.picture_as_pdf),
+                label: const Text("PDF"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton.icon(
+                onPressed: _exportExcel,
+                icon: const Icon(Icons.table_chart),
+                label: const Text("Excel"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1531,6 +1690,13 @@ Future<void> _exportExcel() async {
                       "Account Type",
                       employee!.bankAccountType,
                       field: "bank_account_type",
+                    ),
+                    _profileTile(
+                      Icons.location_on,
+                      "Bank Location",
+                      employee!.location,
+                      field: "location",
+                      requiresApproval: true,
                     ),
                   ]),
 
