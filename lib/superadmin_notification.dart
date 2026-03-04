@@ -968,7 +968,7 @@ class _SuperadminNotificationsPageState
                       ),
                     ),
                   );
-                }),
+                }).toList(),
 
                 const SizedBox(height: 15),
 

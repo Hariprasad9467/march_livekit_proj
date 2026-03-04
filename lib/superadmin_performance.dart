@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'admin_notification.dart';
+import 'superadmin_notification.dart';
 import 'user_provider.dart';
 import 'package:provider/provider.dart';
 import 'sidebar.dart';
@@ -38,7 +38,7 @@ class _SuperadminPerformancePageState extends State<SuperadminPerformancePage> {
   TextEditingController technicalKnowledgeController = TextEditingController();
   TextEditingController businessKnowledgeController = TextEditingController();
 
-  final bool _isloading = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -151,12 +151,18 @@ class _SuperadminPerformancePageState extends State<SuperadminPerformancePage> {
           "month": currentMonth,
           "year": currentYear, // ✅ ADD THIS LINE
           "category": "performance",
-          // "message": "Performance review for $selectedEmpName ($selectedEmpId) - $currentMonth",
-          "message": "Performance received from ($adminName) - $currentMonth",
-          "empId": selectedEmpId,
+          "message": "Performance review received from ($adminName) - $currentMonth",
+          "empId": selectedEmpId, 
+          "receiverId": selectedEmpId,
+          "empName": selectedEmpName,
           "senderName": adminName,
           "senderId": widget.currentUserId,
           "flag": selectedFlag,
+          "communication": communicationController.text,
+          "attitude": attitudeController.text,
+          "technicalKnowledge": technicalKnowledgeController.text,
+          "business": businessKnowledgeController.text,
+    
         };
         await http.post(
           notifUrl,
@@ -169,12 +175,17 @@ class _SuperadminPerformancePageState extends State<SuperadminPerformancePage> {
           "month": currentMonth,
           "year": currentYear, // ✅ ADD THIS LINE
           "category": "performance",
-          // "message": "You reviewed $selectedEmpName ($selectedEmpId) - $currentMonth",
           "message": "Performance sent to ($selectedEmpName) - $currentMonth",
-          "empId": widget.currentUserId, // ✅ logged-in admin’s own ID
+          "empId": widget.currentUserId, 
+          "receiverId": selectedEmpId,
           "senderName": adminName,
           "senderId": widget.currentUserId,
           "flag": selectedFlag,
+          "communication": communicationController.text,
+          "attitude": attitudeController.text,
+          "technicalKnowledge": technicalKnowledgeController.text,
+          "business": businessKnowledgeController.text,
+          "empName": selectedEmpName,
         };
         await http.post(
           notifUrl,
@@ -193,13 +204,13 @@ class _SuperadminPerformancePageState extends State<SuperadminPerformancePage> {
           selectedFlag = "Green Flag";
         });
 
-        // ✅ Navigate to Notification screen
+        // Update the navigation block at the end of submitReview
         Future.delayed(const Duration(milliseconds: 300), () {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  AdminNotificationsPage(empId: widget.currentUserId),
+                  SuperadminNotificationsPage(empId: widget.currentUserId), // 👈 Updated class name
             ),
           );
         });
@@ -390,7 +401,7 @@ class _SuperadminPerformancePageState extends State<SuperadminPerformancePage> {
         ),
         const SizedBox(width: 20),
         ElevatedButton.icon(
-          onPressed: _isloading ? null : submitReview,
+          onPressed: _isLoading ? null : submitReview,
           icon: const Icon(Icons.send),
           label: const Text("Send"),
         ),

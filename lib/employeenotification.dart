@@ -819,7 +819,7 @@ class _EmployeeNotificationsPageState extends State<EmployeeNotificationsPage> {
                       ),
                     ),
                   );
-                }),
+                }).toList(),
 
                 // ✅ REPLY INPUT
                 const SizedBox(height: 15),

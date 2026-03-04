@@ -955,7 +955,7 @@ class _AdminNotificationsPageState extends State<AdminNotificationsPage> {
                       ),
                     ),
                   );
-                }),
+                }).toList(),
 
                 const SizedBox(height: 15),
 
