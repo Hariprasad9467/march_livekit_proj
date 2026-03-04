@@ -1,5 +1,6 @@
 //backend/index.js
 require('dotenv').config();
+process.env.TZ = 'Asia/Kolkata';   // ✅ ADD THIS
 
 const express = require('express');
 const mongoose = require('mongoose');

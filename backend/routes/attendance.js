@@ -18,22 +18,21 @@ function timeToMinutes(timeStr) {
 
 // 🔹 Utility: Always return DD-MM-YYYY
 function formatDateToDDMMYYYY(dateInput) {
-  if (!dateInput) {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, "0");
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const year = today.getFullYear();
-    return `${day}-${month}-${year}`;
-  }
+  const d = dateInput ? new Date(dateInput) : new Date();
 
-  if (typeof dateInput === "string" && /^\d{2}-\d{2}-\d{4}$/.test(dateInput)) {
-    return dateInput;
-  }
+  const options = {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  };
 
-  const d = new Date(dateInput);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
+  const parts = new Intl.DateTimeFormat('en-GB', options).formatToParts(d);
+
+  const day = parts.find(p => p.type === 'day').value;
+  const month = parts.find(p => p.type === 'month').value;
+  const year = parts.find(p => p.type === 'year').value;
+
   return `${day}-${month}-${year}`;
 }
 
@@ -101,13 +100,14 @@ router.put("/attendance/update/:employeeId", async (req, res) => {
 
     // server formatted time "hh:mm:ss AM/PM"
     const serverNowFormatted = () => {
-      return new Date().toLocaleTimeString('en-US', {
-        hour12: true,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-    };
+  return new Date().toLocaleTimeString('en-US', {
+    timeZone: 'Asia/Kolkata',   // ✅ FORCE IST
+    hour12: true,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+};
 
     const computeStoredTotal = (breakTimeStr) => {
       let total = 0;
