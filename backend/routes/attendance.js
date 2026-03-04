@@ -18,21 +18,22 @@ function timeToMinutes(timeStr) {
 
 // 🔹 Utility: Always return DD-MM-YYYY
 function formatDateToDDMMYYYY(dateInput) {
-  const d = dateInput ? new Date(dateInput) : new Date();
+  if (!dateInput) {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, "0");
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const year = today.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
 
-  const options = {
-    timeZone: 'Asia/Kolkata',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  };
+  if (typeof dateInput === "string" && /^\d{2}-\d{2}-\d{4}$/.test(dateInput)) {
+    return dateInput;
+  }
 
-  const parts = new Intl.DateTimeFormat('en-GB', options).formatToParts(d);
-
-  const day = parts.find(p => p.type === 'day').value;
-  const month = parts.find(p => p.type === 'month').value;
-  const year = parts.find(p => p.type === 'year').value;
-
+  const d = new Date(dateInput);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
   return `${day}-${month}-${year}`;
 }
 
@@ -92,8 +93,7 @@ router.put("/attendance/update/:employeeId", async (req, res) => {
   let { date, logoutTime, breakTime, breakStatus, loginReason, logoutReason, status } = req.body;
 
   try {
-    //date = formatDateToDDMMYYYY(date || undefined);
-    date = date || formatDateToDDMMYYYY();
+    date = formatDateToDDMMYYYY(date || undefined);
     const todayRecord = await Attendance.findOne({ employeeId, date });
     if (!todayRecord) return res.status(404).json({ message: "❌ Attendance not found" });
 
@@ -101,14 +101,14 @@ router.put("/attendance/update/:employeeId", async (req, res) => {
 
     // server formatted time "hh:mm:ss AM/PM"
     const serverNowFormatted = () => {
-  return new Date().toLocaleTimeString('en-US', {
-    timeZone: 'Asia/Kolkata',   // ✅ FORCE IST
-    hour12: true,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
-};
+      return new Date().toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Kolkata',   // ✅ FORCE IST
+        hour12: true,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    };
 
     const computeStoredTotal = (breakTimeStr) => {
       let total = 0;
@@ -123,7 +123,7 @@ router.put("/attendance/update/:employeeId", async (req, res) => {
 
     // --- BreakIn: Start break (do NOT block when total >= 60) ---
     if (breakStatus === "BreakIn") {
-      //let totalMinutes = computeStoredTotal(todayRecord.breakTime);
+      let totalMinutes = computeStoredTotal(todayRecord.breakTime);
 
       // Use server timestamp to start break
       const serverStart = serverNowFormatted();
@@ -131,12 +131,13 @@ router.put("/attendance/update/:employeeId", async (req, res) => {
       todayRecord.status = "Break";
       await todayRecord.save();
 
-       return res.status(200).json({
-    message: "⏸ Break started",
-    breakInProgress: serverStart,
-    totalMinutes: computeStoredTotal(todayRecord.breakTime),
-    limitReached: false
-  });
+      return res.json({
+        message: "⏸ Break started",
+        breakInProgress: todayRecord.breakInProgress,
+        totalMinutes,
+        // limitReached is only informational now, not an error block
+        limitReached: totalMinutes >= 60
+      });
     }
 
     // --- BreakOff: finalize break and calculate total (allow totals > 60) ---
