@@ -538,36 +538,41 @@ router.post("/with-files", upload.array("attachments"), async (req, res) => {
 });
 
 
-
-
-// 🔹 Get unread notification count for badge
-// 🔹 Get unread notification count for badge
 router.get('/unread-count/:empId', async (req, res) => {
   try {
     const { empId } = req.params;
 
-    const count = await Notification.countDocuments({
-      isRead: false,
+    const chatCount = await Notification.countDocuments({
+      category: "message",
       $or: [
-        // Rule 1: General direct notifications (not chat messages) meant for this user
-        { 
-          $or: [{ empId: empId }, { receiverId: empId }],
-          category: { $ne: "message" }
-        },
-        // Rule 2: Holiday notifications (often global)
-        { 
-          category: "holiday" 
-        },
-        // Rule 3: Chat Messages where THIS user is involved, but they DID NOT send the last message
-        {
-          category: "message",
-          $or: [{ empId: empId }, { receiverId: empId }],
-          senderId: { $ne: empId } // ✅ THIS IS THE FIX: Ignore if they are the sender
-        }
-      ]
+        { empId, senderId: { $ne: empId } },
+        { receiverId: empId, senderId: { $ne: empId } }
+      ],
+      isRead: false,
+      hiddenFor: { $ne: empId }
     });
 
-    res.json({ count });
+    // 2️⃣ Normal notifications (non-message): unread, visible, not hidden
+    const normalCount = await Notification.countDocuments({
+      category: { $ne: "message" },
+      $or: [{ empId }, { receiverId: empId }],
+      isRead: false,
+      hiddenFor: { $ne: empId }
+    });
+
+    // 3️⃣ Holiday notifications: unread for this user, not hidden
+    const holidayCount = await Notification.countDocuments({
+      category: "holiday",
+      // readBy: { $nin: [empId] },
+      isRead: false,
+      hiddenFor: { $ne: empId }
+    });
+
+    // Total unread count
+    const totalUnread = chatCount + normalCount + holidayCount;
+
+    res.json({ count: totalUnread });
+
   } catch (err) {
     console.error("Unread count error:", err);
     res.status(500).json({ message: "Server error" });
@@ -587,7 +592,18 @@ router.put('/mark-read/:empId', async (req, res) => {
       },
       { $set: { isRead: true } }
     );
-
+    // ✅ Mark holidays as read only for THIS user
+    await Notification.updateMany(
+      {
+        category: "holiday",
+        // readBy: { $nin: [empId] }
+         isRead: false
+      },
+      {
+        // $push: { readBy: empId }
+        $set: { isRead: true }
+      }
+    );
     // ✅ Chat messages (only if user is NOT sender)
     await Notification.updateMany(
       {
