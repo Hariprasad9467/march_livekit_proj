@@ -1,5 +1,4 @@
-//routes/notifications.js 
-
+//routes/notification.js
 const express = require('express');
 const router = express.Router();
 const Notification = require("../models/notifications");
@@ -7,9 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// =======================
 // MULTER CONFIG (Attachments)
-// =======================
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = 'uploads/notifications';
@@ -31,9 +28,9 @@ router.get('/employee/:empId', async (req, res) => {
     const { empId } = req.params;
     const { month, year, category, source } = req.query;
 
-    // ===============================
+    
     // ✅ CHAT SIDEBAR MODE
-    // ===============================
+  
     if (source === "chat") {
 
       const chats = await Notification.find({
@@ -66,6 +63,11 @@ router.get('/employee/:empId', async (req, res) => {
                 ? chat.receiverName || ""
                 : chat.senderName || "";
 
+          // isRead: true if this user is included in readBy OR if they are the last sender
+          const isReadFlag = Array.isArray(chat.readBy) && chat.readBy.includes(empId);
+          const lastMsgSender = lastMsg.senderId || chat.senderId || "";
+          const isRead = isReadFlag || lastMsgSender === empId;
+
           return {
             _id: chat._id,
             partnerId: partnerId,
@@ -74,17 +76,17 @@ router.get('/employee/:empId', async (req, res) => {
               lastMsg.text ||
               (lastMsg.attachments?.length > 0 ? "📎 Attachment" : ""),
             lastTime: lastMsg.createdAt || chat.updatedAt,
-            isRead: chat.isRead || false
+            isRead: !!isRead
           };
         })
-        .filter(Boolean); 
+        .filter(Boolean);
 
       return res.json(result);
     }
 
-    // ===============================
+    
     // ✅ NORMAL NOTIFICATION MODE
-    // ===============================
+   
     let query = {
       $or: [
         { empId: empId },
@@ -182,7 +184,6 @@ router.get('/performance/admin/:adminId', async (req, res) => {
         const query = {
           category: "performance",
           empId: adminId,  // 👈 Only show the copy owned by the Admin
-          // receiverId: { $ne: adminId } // 👈 Ensures it's a 'Sent' record
         };
 
         if (month) query.month = { $regex: new RegExp(`^${month}$`, 'i') };
@@ -348,7 +349,10 @@ router.post('/holiday', async (req, res) => {
       day,
       message,
       holidayType,
-      state: "TN"
+      state: "TN",
+      isRead: false,        // optional (kept for older code), but not used for per-user unread
+      readBy: [],           // IMPORTANT: per-user tracking
+      hiddenFor: []
     });
 
     await holiday.save();
@@ -366,6 +370,15 @@ router.post('/', async (req, res) => {
     if (!message || !empId || !category) {
       return res.status(400).json({ message: "Required fields missing" });
     }
+
+    // Default readBy:
+    // - holidays: nobody has read by default -> []
+    // - messages & other notifications: mark sender as read
+    let initialReadBy = [];
+    if (category !== "holiday") {
+      if (senderId) initialReadBy = [senderId];
+    }
+
     const newNotification = new Notification({ 
       month, 
       year: year || new Date().getFullYear(), // Handle year if missing
@@ -381,7 +394,9 @@ router.post('/', async (req, res) => {
       attitude: attitude || "",
       technicalKnowledge: technicalKnowledge || "",
       business: business || "",
-      empName: empName || ""
+      empName: empName || "",
+      readBy: initialReadBy,
+      hiddenFor: []
     });
 
     await newNotification.save();
@@ -454,7 +469,7 @@ router.post("/with-files", upload.array("attachments"), async (req, res) => {
     });
 
     // ✅ IF CONVERSATION EXISTS
-    // ===============================
+  
    
     if (existingConversation) {
       existingConversation.messages.push({
@@ -481,7 +496,10 @@ router.post("/with-files", upload.array("attachments"), async (req, res) => {
       existingConversation.senderId = senderId;
       existingConversation.senderName = senderName;
 
-      // ✅ ADD THIS LINE: Unhide for everyone because a new message arrived
+      // Mark read only for the sender (so recipient sees unread)
+      existingConversation.readBy = senderId ? [senderId] : [];
+
+      // Unhide for everyone because a new message arrived
       existingConversation.hiddenFor = [];
 
       await existingConversation.save();
@@ -491,9 +509,9 @@ router.post("/with-files", upload.array("attachments"), async (req, res) => {
       });
     }
 
-    // ===============================
+    
     // ✅ CREATE NEW CONVERSATION ONLY IF NOT EXISTS
-    // ===============================
+   
     const newConversation = new Notification({
       category,
       month,
@@ -522,7 +540,9 @@ router.post("/with-files", upload.array("attachments"), async (req, res) => {
             : null
         }
       ],
-      isRead: false
+      isRead: false,
+      readBy: senderId ? [senderId] : [],
+      hiddenFor: []
     });
 
     await newConversation.save();
@@ -538,88 +558,211 @@ router.post("/with-files", upload.array("attachments"), async (req, res) => {
 });
 
 
+// router.get('/unread-count/:empId', async (req, res) => {
+//   try {
+//     const { empId } = req.params;
+
+//     // 1) Non-message non-performance notifications (per-user unread)
+//     const nonMessageCountQuery = {
+//       category: { $nin: ["message", "performance"] },
+//       hiddenFor: { $ne: empId },
+//       $or: [{ empId }, { receiverId: empId }, { empId: null }, { empId: "" }],
+//       readBy: { $ne: empId } // user hasn't read it yet
+//     };
+
+//     // 2) Chat message conversations: last sender != empId AND user hasn't read (readBy)
+//     const chatCountQuery = {
+//       category: "message",
+//       hiddenFor: { $ne: empId },
+//       $or: [{ empId }, { receiverId: empId }],
+//       senderId: { $ne: empId }, // latest sender is not the user
+//       readBy: { $ne: empId }    // user hasn't acknowledged it
+//     };
+
+//     const nonMsgCount = await Notification.countDocuments(nonMessageCountQuery);
+//     const chatCount = await Notification.countDocuments(chatCountQuery);
+
+//     // 3) Performance: count DISTINCT logical reviews unread for this user
+//     const perfMatch = {
+//       category: "performance",
+//       hiddenFor: { $ne: empId },
+//       $or: [{ empId }, { receiverId: empId }, { empId: null }, { empId: "" }],
+//       readBy: { $ne: empId } // not yet marked read by this user
+//     };
+
+//     const perfAgg = await Notification.aggregate([
+//       { $match: perfMatch },
+//       {
+//         $project: {
+//           reviewId: 1,
+//           senderId: { $ifNull: ["$senderId", ""] },
+//           receiverId: { $ifNull: ["$receiverId", ""] },
+//           flag: { $ifNull: ["$flag", ""] },
+//           month: { $ifNull: ["$month", ""] },
+//           year: { $ifNull: ["$year", new Date().getFullYear()] }
+//         }
+//       },
+//       {
+//         $group: {
+//           _id: {
+//             $cond: [
+//               { $and: [{ $ne: ["$reviewId", null] }, { $ne: ["$reviewId", ""] }] },
+//               "$reviewId",
+//               {
+//                 $concat: [
+//                   "$senderId", "|", "$receiverId", "|", "$flag", "|", "$month", "|",
+//                   { $toString: "$year" }
+//                 ]
+//               }
+//             ]
+//           }
+//         }
+//       },
+//       { $count: "distinctPerfCount" }
+//     ]);
+
+//     const distinctPerfCount = (perfAgg[0] && perfAgg[0].distinctPerfCount) || 0;
+//     const total = nonMsgCount + chatCount + distinctPerfCount;
+//     return res.json({ count: total });
+//   } catch (err) {
+//     console.error("Unread count error:", err);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// GET unread count (per-user) — now supports optional month & year filtering
 router.get('/unread-count/:empId', async (req, res) => {
   try {
     const { empId } = req.params;
+    const { month, year } = req.query;
 
-    const chatCount = await Notification.countDocuments({
+    // Base queries
+    const nonMessageCountQuery = {
+      category: { $nin: ["message", "performance"] },
+      hiddenFor: { $ne: empId },
+      $or: [{ empId }, { receiverId: empId }, { empId: null }, { empId: "" }],
+      readBy: { $ne: empId } // user hasn't read it yet
+    };
+
+    const chatCountQuery = {
       category: "message",
-      $or: [
-        { empId, senderId: { $ne: empId } },
-        { receiverId: empId, senderId: { $ne: empId } }
-      ],
-      isRead: false,
-      hiddenFor: { $ne: empId }
-    });
-
-    // 2️⃣ Normal notifications (non-message): unread, visible, not hidden
-    const normalCount = await Notification.countDocuments({
-      category: { $ne: "message" },
+      hiddenFor: { $ne: empId },
       $or: [{ empId }, { receiverId: empId }],
-      isRead: false,
-      hiddenFor: { $ne: empId }
-    });
+      senderId: { $ne: empId }, // latest sender is not the user
+      readBy: { $ne: empId }    // user hasn't acknowledged it
+    };
 
-    // 3️⃣ Holiday notifications: unread for this user, not hidden
-    const holidayCount = await Notification.countDocuments({
-      category: "holiday",
-      // readBy: { $nin: [empId] },
-      isRead: false,
-      hiddenFor: { $ne: empId }
-    });
+    const perfMatch = {
+      category: "performance",
+      hiddenFor: { $ne: empId },
+      $or: [{ empId }, { receiverId: empId }, { empId: null }, { empId: "" }],
+      readBy: { $ne: empId } // not yet marked read by this user
+    };
 
-    // Total unread count
-    const totalUnread = chatCount + normalCount + holidayCount;
+    // Apply month/year filters when provided (keeps backward compatibility)
+    if (month) {
+      const monthRegex = { $regex: new RegExp(`^${month}$`, 'i') };
+      nonMessageCountQuery.month = monthRegex;
+      chatCountQuery.month = monthRegex;
+      perfMatch.month = monthRegex;
+    }
+    if (year) {
+      const yearNum = Number(year);
+      if (!Number.isNaN(yearNum)) {
+        nonMessageCountQuery.year = yearNum;
+        chatCountQuery.year = yearNum;
+        perfMatch.year = yearNum;
+      }
+    }
 
-    res.json({ count: totalUnread });
+    // Counts
+    const nonMsgCount = await Notification.countDocuments(nonMessageCountQuery);
+    const chatCount = await Notification.countDocuments(chatCountQuery);
 
+    // Performance distinct-count (dedupe signature)
+    const perfAgg = await Notification.aggregate([
+      { $match: perfMatch },
+      {
+        $project: {
+          reviewId: 1,
+          senderId: { $ifNull: ["$senderId", ""] },
+          receiverId: { $ifNull: ["$receiverId", ""] },
+          flag: { $ifNull: ["$flag", ""] },
+          month: { $ifNull: ["$month", ""] },
+          year: { $ifNull: ["$year", new Date().getFullYear()] }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $and: [{ $ne: ["$reviewId", null] }, { $ne: ["$reviewId", ""] }] },
+              "$reviewId",
+              {
+                $concat: [
+                  "$senderId", "|", "$receiverId", "|", "$flag", "|", "$month", "|",
+                  { $toString: "$year" }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      { $count: "distinctPerfCount" }
+    ]);
+
+    const distinctPerfCount = (perfAgg[0] && perfAgg[0].distinctPerfCount) || 0;
+    const total = nonMsgCount + chatCount + distinctPerfCount;
+
+    return res.json({ count: total });
   } catch (err) {
     console.error("Unread count error:", err);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 });
 
+// PUT /mark-read/:empId
 router.put('/mark-read/:empId', async (req, res) => {
   try {
     const { empId } = req.params;
 
-    // ✅ Non-message notifications
+    // 1) Non-message notifications (performance, events, etc.) -> mark read for THIS user
     await Notification.updateMany(
       {
-        isRead: false,
         category: { $ne: "message" },
-        $or: [{ empId }, { receiverId: empId }]
+        hiddenFor: { $ne: empId },
+        $or: [{ empId }, { receiverId: empId }, { empId: null }, { empId: "" }],
+        readBy: { $ne: empId } // only those not already marked by them
       },
-      { $set: { isRead: true } }
+      { $addToSet: { readBy: empId } } // mark read for THIS user only
     );
-    // ✅ Mark holidays as read only for THIS user
-    await Notification.updateMany(
-      {
-        category: "holiday",
-        // readBy: { $nin: [empId] }
-         isRead: false
-      },
-      {
-        // $push: { readBy: empId }
-        $set: { isRead: true }
-      }
-    );
-    // ✅ Chat messages (only if user is NOT sender)
+
+    // 2) Chat conversations: mark conversation as read for THIS user (only if last msg wasn't by them)
     await Notification.updateMany(
       {
         category: "message",
-        isRead: false,
-        senderId: { $ne: empId },
-        $or: [{ empId }, { receiverId: empId }]
+        $or: [{ empId }, { receiverId: empId }],
+        senderId: { $ne: empId }, // last sender not the user
+        readBy: { $ne: empId }
       },
-      { $set: { isRead: true } }
+      { $addToSet: { readBy: empId } }
     );
 
-    res.json({ message: "Notifications marked as read" });
+    // 3) HOLIDAYS: mark as read FOR THIS USER only (was previously using global isRead=true)
+    await Notification.updateMany(
+      {
+        category: "holiday",
+        hiddenFor: { $ne: empId },
+        $or: [{ empId }, { receiverId: empId }, { empId: null }, { empId: "" }],
+        readBy: { $ne: empId }
+      },
+      { $addToSet: { readBy: empId } }
+    );
 
+    return res.json({ message: "Notifications marked as read for user" });
   } catch (err) {
     console.error("Mark read error:", err);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 });
  

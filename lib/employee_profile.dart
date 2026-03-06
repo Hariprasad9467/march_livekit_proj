@@ -317,6 +317,12 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
         }
         break;
 
+      case "email_id":
+        if (!RegExp(r'^[\w\.-]+@[\w\.-]+\.com$').hasMatch(value)) {
+          return "Enter valid email";
+        }
+        break;
+
       case "aadhar_number":
         if (!RegExp(r'^\d{12}$').hasMatch(value)) {
           return "Aadhar must be 12 digits";
@@ -382,8 +388,8 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
         ];
       case "blood_group":
         return [
-          FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z+-]')),
-          LengthLimitingTextInputFormatter(3),
+          FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9+-]')),
+          LengthLimitingTextInputFormatter(5),
         ];
 
       case "uan_number":
@@ -869,38 +875,66 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                 ),
                 TextFormField(
                   controller: startDateController,
+                  readOnly: true,
                   style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
-                    hintText: "Start Date (YYYY-MM-DD)",
+                    hintText: "Select Start Date (YYYY-MM-DD)",
                     hintStyle: TextStyle(color: Colors.white54),
+                    suffixIcon: Icon(
+                      Icons.calendar_today,
+                      color: Colors.white70,
+                    ),
                   ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9-]')),
-                  ],
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Required';
-                    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) {
-                      return 'Invalid date format (YYYY-MM-DD)';
-                    }
                     return null;
+                  },
+                  onTap: () async {
+                    FocusScope.of(context).requestFocus(FocusNode());
+
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(1950),
+                      lastDate: DateTime.now(),
+                    );
+
+                    if (pickedDate != null) {
+                      startDateController.text =
+                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                    }
                   },
                 ),
                 TextFormField(
                   controller: endDateController,
+                  readOnly: true,
                   style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
-                    hintText: "End Date (YYYY-MM-DD)",
+                    hintText: "Select End Date (YYYY-MM-DD)",
                     hintStyle: TextStyle(color: Colors.white54),
+                    suffixIcon: Icon(
+                      Icons.calendar_today,
+                      color: Colors.white70,
+                    ),
                   ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9-]')),
-                  ],
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Required';
-                    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) {
-                      return 'Invalid date format (YYYY-MM-DD)';
-                    }
                     return null;
+                  },
+                  onTap: () async {
+                    FocusScope.of(context).requestFocus(FocusNode());
+
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(1950),
+                      lastDate: DateTime.now(),
+                    );
+
+                    if (pickedDate != null) {
+                      endDateController.text =
+                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                    }
                   },
                 ),
                 TextFormField(
@@ -1190,38 +1224,66 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                 ),
                 TextFormField(
                   controller: startdateController,
+                  readOnly: true,
                   style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
-                    hintText: "Start Date (YYYY-MM-DD)",
+                    hintText: "Select Start Date (YYYY-MM-DD)",
                     hintStyle: TextStyle(color: Colors.white54),
+                    suffixIcon: Icon(
+                      Icons.calendar_today,
+                      color: Colors.white70,
+                    ),
                   ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9-]')),
-                  ],
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Required';
-                    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) {
-                      return 'Invalid date format (YYYY-MM-DD)';
-                    }
                     return null;
+                  },
+                  onTap: () async {
+                    FocusScope.of(context).requestFocus(FocusNode());
+
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(1950),
+                      lastDate: DateTime.now(),
+                    );
+
+                    if (pickedDate != null) {
+                      startdateController.text =
+                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                    }
                   },
                 ),
                 TextFormField(
                   controller: enddateController,
+                  readOnly: true,
                   style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
-                    hintText: "End Date (YYYY-MM-DD)",
+                    hintText: "Select End Date (YYYY-MM-DD)",
                     hintStyle: TextStyle(color: Colors.white54),
+                    suffixIcon: Icon(
+                      Icons.calendar_today,
+                      color: Colors.white70,
+                    ),
                   ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9-]')),
-                  ],
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Required';
-                    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) {
-                      return 'Invalid date format (YYYY-MM-DD)';
-                    }
                     return null;
+                  },
+                  onTap: () async {
+                    FocusScope.of(context).requestFocus(FocusNode());
+
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(1950),
+                      lastDate: DateTime.now(),
+                    );
+
+                    if (pickedDate != null) {
+                      enddateController.text =
+                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                    }
                   },
                 ),
                 TextFormField(

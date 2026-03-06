@@ -41,11 +41,10 @@ const employeeSchema = new mongoose.Schema({
   alternative_mobile: { type: String },
   email_id: { type: String },
   bank_name: { type: String },
-  //location: { type: String },
   ifsc_code: { type: String },
   bank_account_number: { type: String },
   bank_account_type: { type: String },
-  location: { type: String },
+  location: { type: String },  
   experiences: [experienceSchema],
   profileDocs: {
     aadhar: { type: String },

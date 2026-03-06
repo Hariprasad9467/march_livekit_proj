@@ -104,6 +104,7 @@ class _EmployeeNotificationsPageState extends State<EmployeeNotificationsPage> {
     } catch (e) {
       setState(() => error = "Server/network error: $e");
     } finally {
+      await _markAllAsRead();
       setState(() => isLoading = false);
     }
   }
@@ -353,6 +354,36 @@ class _EmployeeNotificationsPageState extends State<EmployeeNotificationsPage> {
     }
   }
 
+//   Future<int> fetchUnreadCount(String empId) async {
+//   final res = await http.get(Uri.parse("http://localhost:5000/notifications/unread-count/$empId"));
+//   if (res.statusCode == 200) {
+//     final decoded = json.decode(res.body);
+//     return decoded['count'] ?? 0;
+//   }
+//   return 0;
+// }
+Future<int> fetchUnreadCount(String empId, {String? month, int? year}) async {
+  final List<String> months = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+  final DateTime now = DateTime.now();
+  final String currentMonth = months[now.month - 1];
+  final int currentYear = now.year;
+
+  final String useMonth = month ?? currentMonth;
+  final int useYear = year ?? currentYear;
+
+  final res = await http.get(Uri.parse(
+    "https://march-livekit-proj.onrender.com/notifications/unread-count/$empId?month=$useMonth&year=$useYear"
+  ));
+  if (res.statusCode == 200) {
+    final decoded = json.decode(res.body);
+    return decoded['count'] ?? 0;
+  }
+  return 0;
+}
+ 
   /// 🔹 Fetch Holiday Notifications (Filtered by Year and Month)
   Future<void> fetchHolidayNotifications() async {
     final uri = Uri.parse(
@@ -819,7 +850,7 @@ class _EmployeeNotificationsPageState extends State<EmployeeNotificationsPage> {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
 
                 // ✅ REPLY INPUT
                 const SizedBox(height: 15),

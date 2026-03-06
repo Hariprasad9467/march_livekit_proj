@@ -84,22 +84,53 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
 
   int _notificationCount = 0; // ✅ New state variable
 
-  Future<void> _fetchNotificationCount() async {
-    final employeeId = Provider.of<UserProvider>(
-      context,
-      listen: false,
-    ).employeeId;
-    if (employeeId == null) return;
+  // Future<void> _fetchNotificationCount() async {
+  //   final employeeId = Provider.of<UserProvider>(
+  //     context,
+  //     listen: false,
+  //   ).employeeId;
+  //   if (employeeId == null) return;
 
-    final res = await http.get(
-      Uri.parse("https://march-livekit-proj.onrender.com/notifications/unread-count/$employeeId"),
-    );
+  //   final res = await http.get(
+  //     Uri.parse("http://localhost:5000/notifications/unread-count/$employeeId"),
+  //   );
 
-    if (res.statusCode == 200 && mounted) {
-      final data = jsonDecode(res.body);
-      setState(() => _notificationCount = data["count"] ?? 0);
-    }
+  //   if (res.statusCode == 200 && mounted) {
+  //     final data = jsonDecode(res.body);
+  //     setState(() => _notificationCount = data["count"] ?? 0);
+  //   }
+  // }
+
+  // call with no args to use current month/year
+Future<void> _fetchNotificationCount({String? month, int? year}) async {
+  final employeeId = Provider.of<UserProvider>(
+    context,
+    listen: false,
+  ).employeeId;
+  if (employeeId == null) return;
+
+  final List<String> months = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+  final DateTime now = DateTime.now();
+  final String currentMonth = months[now.month - 1];
+  final int currentYear = now.year;
+
+  final String useMonth = month ?? currentMonth;
+  final int useYear = year ?? currentYear;
+
+  final res = await http.get(
+    Uri.parse(
+      "https://march-livekit-proj.onrender.com/notifications/unread-count/$employeeId?month=$useMonth&year=$useYear"
+    ),
+  );
+
+  if (res.statusCode == 200 && mounted) {
+    final data = jsonDecode(res.body);
+    setState(() => _notificationCount = data["count"] ?? 0);
   }
+}
 
   /// Fetch employee name from backend.
   /// Attempts the common /api/employees/:id route first, then falls back to /get-employee-name/:id.
@@ -1293,10 +1324,15 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
                           '',
                     ),
                   ),
-                ).then((_) {
-                  // This triggers when you come BACK to the dashboard
-                  _fetchNotificationCount();
-                });
+                ).then((result) {
+  if (result is Map) {
+    final String? m = result['month'];
+    final int? y = result['year'];
+    _fetchNotificationCount(month: m, year: y);
+  } else {
+    _fetchNotificationCount();
+  }
+});
               }),
               if (_notificationCount > 0)
                 Positioned(

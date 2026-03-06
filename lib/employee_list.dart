@@ -116,6 +116,10 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
     final imageController = TextEditingController(
       text: emp["employeeImage"] ?? "",
     );
+    final dojController =
+        TextEditingController(text: emp['dateOfAppointment'] ?? '');
+    final workEmailController =
+        TextEditingController(text: emp['workEmail'] ?? '');
 
     bool obscurePassword = true;
     Uint8List? pickedImageBytes; // Web
@@ -152,6 +156,46 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                 ),
                 const SizedBox(height: 12),
 
+                // Date of Joining
+                TextField(
+                  controller: dojController,
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    labelText: "Date of Joining",
+                    suffixIcon: Icon(Icons.calendar_today),
+                  ),
+                  onTap: () async {
+                    DateTime initialDate = DateTime.now();
+                    if (dojController.text.isNotEmpty) {
+                      try {
+                        initialDate =
+                            DateFormat('dd-MM-yyyy').parse(dojController.text);
+                      } catch (e) {
+                        // Keep initialDate as DateTime.now() if parsing fails
+                      }
+                    }
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: initialDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (pickedDate != null) {
+                      String formattedDate =
+                          DateFormat('dd-MM-yyyy').format(pickedDate);
+                      setState(() => dojController.text = formattedDate);
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // Work Email
+                TextField(
+                  controller: workEmailController,
+                  decoration: const InputDecoration(labelText: "Work Email"),
+                ),
+                const SizedBox(height: 12),
+
                 // 🔐 Password field (only visible in edit dialog)
                 TextField(
                   controller: passwordController,
@@ -179,7 +223,6 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                     Expanded(
                       child: TextField(
                         controller: imageController,
-                        readOnly: true,
                         decoration: const InputDecoration(
                           labelText: "Profile Image (.jpg)",
                         ),
@@ -264,13 +307,16 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                   var request = http.MultipartRequest(
                     'PUT',
                     Uri.parse(
-                      "https://march-livekit-proj.onrender.com/api/employees/${idController.text}",
+                      "https://march-livekit-proj.onrender.com/api/employees/${emp["employeeId"]}",
                     ),
                   );
+                  request.fields['employeeId'] = idController.text;
                   request.fields['employeeName'] = nameController.text;
                   request.fields['position'] = positionController.text;
                   request.fields['domain'] = domainController.text;
                   request.fields['password'] = passwordController.text;
+                  request.fields['dateOfAppointment'] = dojController.text;
+                  request.fields['workEmail'] = workEmailController.text;
 
                   if (pickedImageBytes != null) {
                     request.files.add(

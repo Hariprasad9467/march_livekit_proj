@@ -19,13 +19,14 @@ class MsgPage extends StatefulWidget {
   State<MsgPage> createState() => _MsgPageState();
 }
 
+
 class _MsgPageState extends State<MsgPage> {
   List<dynamic> _chatSidebarList = [];
   String? _selectedEmployeeId;
-  final Map<String, String> _sidebarImages = {};
+  Map<String, String> _sidebarImages = {};
   Map<String, dynamic>? employeeData;
-  final Map<String, String> _sidebarNames = {};
-  final Map<String, int> _messageIndexMap = {};
+  Map<String, String> _sidebarNames = {};
+  Map<String, int> _messageIndexMap = {};
   String? _highlightedMessageId;
   List<dynamic> _chatHistory = [];
   final TextEditingController _msgController = TextEditingController();
@@ -37,14 +38,14 @@ class _MsgPageState extends State<MsgPage> {
   bool _isTyping = false;
   Timer? _refreshTimer;
   bool _selectionMode = false;
-  final Set<String> _selectedMessageIds = {};
+  Set<String> _selectedMessageIds = {};
   String? _conversationId;
   Map<String, dynamic>? _replyMessage;
   final List<PlatformFile> _selectedFiles = [];
   List<dynamic> _allEmployees = [];
   List<dynamic> _filteredEmployees = [];
   final TextEditingController _searchController = TextEditingController();
-  final bool _showEmployeeSearch = false;
+  bool _showEmployeeSearch = false;
   bool _sidebarBusy = false;
   bool _chatBusy = false;
   bool _isUserNearBottom = true;
@@ -399,6 +400,50 @@ class _MsgPageState extends State<MsgPage> {
     }
   }
 
+  void _handleMessageMenu(String action, Map<String, dynamic> msg) {
+    switch (action) {
+      case 'select':
+        _toggleSelection(msg['_id']);
+        break;
+
+      case 'reply':
+        setState(() {
+          _replyMessage = msg;
+        });
+        break;
+
+      case 'copy':
+        final text = (msg['text'] ?? "").toString();
+        Clipboard.setData(ClipboardData(text: text));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Copied")));
+        break;
+
+      case 'forward':
+        setState(() {
+          _selectedMessageIds = {msg['_id']};
+          _selectionMode = true;
+        });
+        _openForwardDialog();
+        break;
+
+      case 'delete_me':
+        setState(() {
+          _selectedMessageIds = {msg['_id']};
+        });
+        deleteForMe();
+        break;
+
+      case 'delete_all':
+        setState(() {
+          _selectedMessageIds = {msg['_id']};
+        });
+        deleteForEveryone();
+        break;
+    }
+  }
+
   void _toggleSelection(String messageId) {
     setState(() {
       _selectionMode = true;
@@ -472,13 +517,27 @@ class _MsgPageState extends State<MsgPage> {
   }
 
   Future<void> _showDeleteDialog() async {
+    if (_selectedMessageIds.isEmpty) return;
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final myId = userProvider.employeeId;
+
+    if (myId == null) return;
+
+    // Check if ALL selected messages belong to me
+    final bool allMine = _selectedMessageIds.every((id) {
+      final msg = _chatHistory.firstWhere((m) => m['_id'] == id);
+      return msg['senderId'] == myId;
+    });
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text("Delete Messages"),
-          content: const Text("Choose delete dialog"),
+          content: const Text("Choose delete option"),
           actions: [
+            // Always show delete for me
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -486,13 +545,16 @@ class _MsgPageState extends State<MsgPage> {
               },
               child: const Text("Delete for me"),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                deleteForEveryone();
-              },
-              child: const Text("Delete for everyone"),
-            ),
+
+            // Show delete for everyone ONLY if message belongs to me
+            if (allMine)
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  deleteForEveryone();
+                },
+                child: const Text("Delete for everyone"),
+              ),
           ],
         );
       },
@@ -1262,215 +1324,335 @@ class _MsgPageState extends State<MsgPage> {
                                       vertical: 8,
                                       horizontal: 12,
                                     ),
-                                    child: Stack(
+
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
+                                        Stack(
                                           children: [
-                                            if (msg['replyTo'] != null)
-                                              GestureDetector(
-                                                onTap: () {
-                                                  final replyId =
-                                                      msg['replyTo']['messageId'];
-                                                  if (replyId != null) {
-                                                    _scrollToMessage(replyId);
-                                                  }
-                                                },
-                                                child: Container(
-                                                  margin: const EdgeInsets.only(
-                                                    bottom: 6,
-                                                  ),
-                                                  padding: const EdgeInsets.all(
-                                                    6,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.grey.shade200,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          6,
-                                                        ),
-                                                    border: const Border(
-                                                      left: BorderSide(
-                                                        color:
-                                                            Colors.deepPurple,
-                                                        width: 3,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        msg['replyTo']['senderName'] ??
-                                                            "",
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 12,
-                                                          color:
-                                                              Colors.deepPurple,
-                                                        ),
-                                                      ),
-                                                      Builder(
-                                                        builder: (_) {
-                                                          final List
-                                                          attachments =
-                                                              msg['replyTo']['attachments'] ??
-                                                              [];
-
-                                                          if (attachments
-                                                              .isNotEmpty) {
-                                                            final fileName =
-                                                                attachments[0]['originalName'] ??
-                                                                attachments[0]['filename'] ??
-                                                                "Attachment";
-
-                                                            return Row(
-                                                              children: [
-                                                                const Icon(
-                                                                  Icons
-                                                                      .insert_drive_file,
-                                                                  size: 14,
-                                                                ),
-                                                                const SizedBox(
-                                                                  width: 4,
-                                                                ),
-                                                                Expanded(
-                                                                  child: Text(
-                                                                    fileName,
-                                                                    maxLines: 1,
-                                                                    overflow:
-                                                                        TextOverflow
-                                                                            .ellipsis,
-                                                                    style: const TextStyle(
-                                                                      fontSize:
-                                                                          12,
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            );
-                                                          }
-
-                                                          return Text(
-                                                            msg['replyTo']['text'] ??
-                                                                "",
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontSize: 12,
-                                                                ),
-                                                          );
-                                                        },
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                right: 22,
                                               ),
-                                            if (attachments.isNotEmpty)
-                                              ...attachments.map((file) {
-                                                final isImg = _isImage(
-                                                  file['filename'],
-                                                );
-                                                final url =
-                                                    "https://march-livekit-proj.onrender.com/${file['path'].replaceAll('\\', '/')}";
-                                                return Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        bottom: 5,
-                                                      ),
-                                                  child: isImg
-                                                      ? ClipRRect(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (msg['replyTo'] != null)
+                                                    GestureDetector(
+                                                      onTap: () {
+                                                        final replyId =
+                                                            msg['replyTo']['messageId'];
+                                                        if (replyId != null) {
+                                                          _scrollToMessage(
+                                                            replyId,
+                                                          );
+                                                        }
+                                                      },
+                                                      child: Container(
+                                                        margin:
+                                                            const EdgeInsets.only(
+                                                              bottom: 6,
+                                                            ),
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                              6,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors
+                                                              .grey
+                                                              .shade200,
                                                           borderRadius:
                                                               BorderRadius.circular(
-                                                                8,
+                                                                6,
                                                               ),
-                                                          child: Image.network(
-                                                            url,
-                                                            width: 200,
-                                                            fit: BoxFit.cover,
+                                                          border: const Border(
+                                                            left: BorderSide(
+                                                              color: Colors
+                                                                  .deepPurple,
+                                                              width: 3,
+                                                            ),
                                                           ),
-                                                        )
-                                                      : Container(
-                                                          padding:
-                                                              const EdgeInsets.symmetric(
-                                                                horizontal: 10,
-                                                                vertical: 6,
-                                                              ),
-                                                          decoration: BoxDecoration(
-                                                            color: Colors
-                                                                .grey[200],
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  10,
-                                                                ),
-                                                          ),
-                                                          child: Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              const Icon(
-                                                                Icons
-                                                                    .insert_drive_file,
+                                                        ),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              msg['replyTo']['senderName'] ??
+                                                                  "",
+                                                              style: const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 12,
                                                                 color: Colors
                                                                     .deepPurple,
                                                               ),
-                                                              const SizedBox(
-                                                                width: 8,
-                                                              ),
-                                                              Flexible(
-                                                                child: Text(
-                                                                  file['originalName'] ??
-                                                                      "Document",
+                                                            ),
+                                                            Builder(
+                                                              builder: (_) {
+                                                                final List
+                                                                attachments =
+                                                                    msg['replyTo']['attachments'] ??
+                                                                    [];
+
+                                                                if (attachments
+                                                                    .isNotEmpty) {
+                                                                  final fileName =
+                                                                      attachments[0]['originalName'] ??
+                                                                      attachments[0]['filename'] ??
+                                                                      "Attachment";
+
+                                                                  return Row(
+                                                                    children: [
+                                                                      const Icon(
+                                                                        Icons
+                                                                            .insert_drive_file,
+                                                                        size:
+                                                                            14,
+                                                                      ),
+                                                                      const SizedBox(
+                                                                        width:
+                                                                            4,
+                                                                      ),
+                                                                      Expanded(
+                                                                        child: Text(
+                                                                          fileName,
+                                                                          maxLines:
+                                                                              1,
+                                                                          overflow:
+                                                                              TextOverflow.ellipsis,
+                                                                          style: const TextStyle(
+                                                                            fontSize:
+                                                                                12,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  );
+                                                                }
+
+                                                                return Text(
+                                                                  msg['replyTo']['text'] ??
+                                                                      "",
                                                                   maxLines: 1,
                                                                   overflow:
                                                                       TextOverflow
                                                                           .ellipsis,
-                                                                ),
-                                                              ),
-                                                              IconButton(
-                                                                icon: const Icon(
-                                                                  Icons
-                                                                      .download,
-                                                                  size: 20,
-                                                                  color: Colors
-                                                                      .green,
-                                                                ),
-                                                                onPressed: () =>
-                                                                    _downloadFile(
-                                                                      url,
-                                                                    ),
-                                                              ),
-                                                            ],
-                                                          ),
+                                                                  style:
+                                                                      const TextStyle(
+                                                                        fontSize:
+                                                                            12,
+                                                                      ),
+                                                                );
+                                                              },
+                                                            ),
+                                                          ],
                                                         ),
-                                                );
-                                              }),
-                                            if (msg['text'] != null &&
-                                                msg['text']
-                                                    .toString()
-                                                    .isNotEmpty)
-                                              SelectableText(
-                                                msg['text'],
-                                                style: const TextStyle(
-                                                  fontSize: 15,
-                                                  color: Colors.black87,
-                                                ),
-                                              ),
-                                            const SizedBox(height: 3),
-                                            Text(
-                                              timeStr,
-                                              style: const TextStyle(
-                                                fontSize: 10,
-                                                color: Colors.black54,
-                                                fontStyle: FontStyle.italic,
+                                                      ),
+                                                    ),
+                                                  if (attachments.isNotEmpty)
+                                                    ...attachments.map((file) {
+                                                      final isImg = _isImage(
+                                                        file['filename'],
+                                                      );
+                                                      final url =
+                                                          "https://march-livekit-proj.onrender.com/${file['path'].replaceAll('\\', '/')}";
+
+                                                      return Padding(
+                                                        padding:
+                                                            const EdgeInsets.only(
+                                                              bottom: 5,
+                                                            ),
+                                                        child: isImg
+                                                            ? ClipRRect(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      8,
+                                                                    ),
+                                                                child:
+                                                                    Image.network(
+                                                                      url,
+                                                                      width:
+                                                                          200,
+                                                                      fit: BoxFit
+                                                                          .cover,
+                                                                    ),
+                                                              )
+                                                            : Container(
+                                                                padding:
+                                                                    const EdgeInsets.symmetric(
+                                                                      horizontal:
+                                                                          10,
+                                                                      vertical:
+                                                                          6,
+                                                                    ),
+                                                                decoration: BoxDecoration(
+                                                                  color: Colors
+                                                                      .grey[200],
+                                                                  borderRadius:
+                                                                      BorderRadius.circular(
+                                                                        10,
+                                                                      ),
+                                                                ),
+                                                                child: Row(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .min,
+                                                                  children: [
+                                                                    const Icon(
+                                                                      Icons
+                                                                          .insert_drive_file,
+                                                                      color: Colors
+                                                                          .deepPurple,
+                                                                    ),
+                                                                    const SizedBox(
+                                                                      width: 8,
+                                                                    ),
+                                                                    Flexible(
+                                                                      child: Text(
+                                                                        file['originalName'] ??
+                                                                            "Document",
+                                                                        maxLines:
+                                                                            1,
+                                                                        overflow:
+                                                                            TextOverflow.ellipsis,
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                      );
+                                                    }),
+
+                                                  if (msg['text'] != null &&
+                                                      msg['text']
+                                                          .toString()
+                                                          .isNotEmpty)
+                                                    Text(
+                                                      msg['text'],
+                                                      style: const TextStyle(
+                                                        fontSize: 15,
+                                                        color: Colors.black87,
+                                                      ),
+                                                    ),
+
+                                                  const SizedBox(height: 4),
+
+                                                  Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+
+                                                    children: [
+                                                      Text(
+                                                        timeStr,
+                                                        style: const TextStyle(
+                                                          fontSize: 10,
+                                                          color: Colors.black54,
+                                                          fontStyle:
+                                                              FontStyle.italic,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      PopupMenuButton<String>(
+                                                        padding:
+                                                            EdgeInsets.zero,
+                                                        constraints:
+                                                            const BoxConstraints(),
+                                                        icon: const Icon(
+                                                          Icons
+                                                              .keyboard_arrow_down,
+                                                          size: 16,
+                                                          color: Colors.grey,
+                                                        ),
+                                                        onSelected: (value) {
+                                                          _handleMessageMenu(
+                                                            value,
+                                                            msg,
+                                                          );
+                                                        },
+                                                        itemBuilder: (context) {
+                                                          List<
+                                                            PopupMenuEntry<
+                                                              String
+                                                            >
+                                                          >
+                                                          items = [];
+
+                                                          items.add(
+                                                            const PopupMenuItem(
+                                                              value: 'select',
+                                                              child: Text(
+                                                                "Select",
+                                                              ),
+                                                            ),
+                                                          );
+
+                                                          items.add(
+                                                            const PopupMenuItem(
+                                                              value: 'reply',
+                                                              child: Text(
+                                                                "Reply",
+                                                              ),
+                                                            ),
+                                                          );
+
+                                                          if ((msg['text'] ??
+                                                                  "")
+                                                              .toString()
+                                                              .isNotEmpty) {
+                                                            items.add(
+                                                              const PopupMenuItem(
+                                                                value: 'copy',
+                                                                child: Text(
+                                                                  "Copy",
+                                                                ),
+                                                              ),
+                                                            );
+                                                          }
+
+                                                          items.add(
+                                                            const PopupMenuItem(
+                                                              value: 'forward',
+                                                              child: Text(
+                                                                "Forward",
+                                                              ),
+                                                            ),
+                                                          );
+
+                                                          items.add(
+                                                            const PopupMenuItem(
+                                                              value:
+                                                                  'delete_me',
+                                                              child: Text(
+                                                                "Delete for me",
+                                                              ),
+                                                            ),
+                                                          );
+
+                                                          if (isMe) {
+                                                            items.add(
+                                                              const PopupMenuItem(
+                                                                value:
+                                                                    'delete_all',
+                                                                child: Text(
+                                                                  "Delete for everyone",
+                                                                ),
+                                                              ),
+                                                            );
+                                                          }
+
+                                                          return items;
+                                                        },
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ],
