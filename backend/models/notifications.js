@@ -1,4 +1,4 @@
-//models/notifications.js
+// models/notifications.js
 
 const mongoose = require("mongoose");
 
@@ -9,6 +9,7 @@ const notificationSchema = new mongoose.Schema({
     enum: ["message", "performance", "meeting", "event", "holiday", "leave"]
   },
 
+  // Holiday-specific
   holidayType: {
     type: String,
     enum: ["FIXED", "FLOATING"],
@@ -23,7 +24,10 @@ const notificationSchema = new mongoose.Schema({
       "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
     ],
-    required: true 
+    // only required for holiday (previously was always required)
+    required: function () {
+      return this.category === "holiday";
+    }
   },
 
   day: {
@@ -37,7 +41,7 @@ const notificationSchema = new mongoose.Schema({
 
   year: {
     type: Number,
-    required: true, 
+    required: true,
     index: true
   },
 
@@ -48,9 +52,10 @@ const notificationSchema = new mongoose.Schema({
 
   message: {
     type: String,
-    required: false 
+    required: false
   },
 
+  // chat messages array
   messages: [
     {
       senderId: String,
@@ -58,7 +63,15 @@ const notificationSchema = new mongoose.Schema({
       receiverId: { type: String, default: "" },
       receiverName: { type: String, default: "" },
       text: String,
-      attachments: Array,
+      attachments: [
+        {
+          filename: String,
+          originalName: String,
+          path: String,
+          mimetype: String,
+          size: Number
+        }
+      ],
       createdAt: { type: Date, default: Date.now },
       replyTo: {
         messageId: String,
@@ -81,6 +94,7 @@ const notificationSchema = new mongoose.Schema({
     }
   ],
 
+  // Performance fields (required for performance entries)
   empId: {
     type: String,
     required: function () {
@@ -88,53 +102,67 @@ const notificationSchema = new mongoose.Schema({
     }
   },
   receiverId: {
-  type: String,
-  required: function () {
-    return this.category === "performance";
-  }
-},
+    type: String,
+    required: function () {
+      return this.category === "performance";
+    }
+  },
 
-reviewId: String,
-senderId: String,
-senderName: String,
+  reviewId: String,
+  senderId: String,
+  senderName: String,
 
-flag: {
-  type: String,
-  required: function () {
-    return this.category === "performance";
-  }
-},
-  reviewId:  String,
-  senderId:  String,
-  senderName:  String,
-  communication:  String,
-  attitude:  String,
-  technicalKnowledge:  String,
-  business:  String,
-  empName:  String,
-  receiverName:String,
+  flag: {
+    type: String,
+    required: function () {
+      return this.category === "performance";
+    }
+  },
+
+  communication: String,
+  attitude: String,
+  technicalKnowledge: String,
+  business: String,
+  empName: String,
+  receiverName: String,
+
+  // top-level attachments (used by some non-chat notifications)
   attachments: [
     {
-      filename: String,      // original file name
-      originalName: String,  // field added to match route logic
-      path: String,          // server path
+      filename: String,
+      originalName: String,
+      path: String,
       mimetype: String,
       size: Number
     }
   ],
+
+  // Conversation-level boolean (still useful for message conversations)
   isRead: {
     type: Boolean,
     default: false,
     index: true
   },
 
-  createdAt: { type: Date, default: Date.now },
+  // Per-user read tracking (NEW)
+  readBy: {
+    type: [String],
+    default: [],
+    index: true
+  },
 
+  // Hide-for list (already present)
   hiddenFor: {
     type: [String],
     default: []
   },
 
-},{ timestamps: true });
+  createdAt: { type: Date, default: Date.now }
+
+}, { timestamps: true });
+
+// Optional: helpful compound indexes for faster unread-count queries
+notificationSchema.index({ category: 1, readBy: 1 });
+notificationSchema.index({ category: 1, hiddenFor: 1 });
 
 module.exports = mongoose.model("Notification", notificationSchema);
