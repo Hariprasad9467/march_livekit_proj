@@ -454,14 +454,14 @@ List<dynamic> get selectedStudentList {
             DataCell(
               Row(
                 children: [
-                  IconButton(
+                  /*IconButton(
                     icon: const Icon(Icons.remove_red_eye, color: Colors.blue),
                     onPressed: resume.isEmpty ? null : () => _openResumeInNewTab(resume),
                   ),
                   IconButton(
                     icon: const Icon(Icons.download, color: Colors.green),
                     onPressed: resume.isEmpty ? null : () => _downloadResumeWeb(resume),
-                  ),
+                  ),*/
                   IconButton(
                     icon: const Icon(Icons.edit, color: Colors.orange),
                     onPressed: () => _addOrEditStudent(existing: s),
